@@ -1,0 +1,1752 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>바탕화면달력</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#cdeafc">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="달력">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #fff; color: #1d2433;
+  font-family: -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+svg .f { fill: currentColor; stroke: none; }
+[hidden] { display: none !important; }
+.sp { flex: 1; }
+.hiddenInput { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; left: 20px; top: 40px; }
+.small { font-size: 13px; } .muted { color: #8a94a6; line-height: 1.6; }
+
+
+#monthView { position: fixed; inset: 0; display: flex; flex-direction: column; }
+.top { flex: none; display: flex; align-items: center; gap: 6px; padding: calc(env(safe-area-inset-top) + 14px) 14px 14px 20px;
+  background: linear-gradient(180deg, #cdeafc 0%, #e6f5fe 100%); }
+.title { font-size: clamp(20px, 6.6vw, 27px); font-weight: 800; letter-spacing: -.3px; color: #2a2f3a; white-space: nowrap; }
+.top { padding-left: 6px !important; gap: 2px !important; }
+.arrow { width: 34px; height: 40px; display: grid; place-items: center; color: #2b6f99; flex: none; }
+.arrow svg { width: 22px; height: 22px; stroke-width: 2.4; }
+.top .icon { width: 38px; flex: none; }
+.pill-sm { white-space: nowrap; flex: none; }
+.wide.danger, #confirmYes { background: #fdecec; color: #c62828; }
+#confirmBg { position: fixed; inset: 0; background: rgba(20,40,60,.45); z-index: 25; display: grid; place-items: center; padding: 20px; }
+.drow > .wide { flex: 1; }
+.del { display: flex; align-items: center; gap: 8px; padding: 9px 4px; border-bottom: 1px solid #eef1f4; color: #1d2433; }
+.del .info { flex: 1; min-width: 0; }
+.del .info b { font-size: 15px; }
+.del button { padding: 6px 12px; border-radius: 8px; background: #eaf6fd; color: #1478b8; font-size: 14px; }
+#errBox { position: fixed; left: 10px; right: 10px; top: 10px; z-index: 40; background: #fff3f3; color: #b71c1c; border: 1px solid #f5c2c2; border-radius: 10px; padding: 10px; font-size: 13px; white-space: pre-wrap; }
+.caret { font-size: 15px; vertical-align: 3px; }
+.icon { width: 44px; height: 40px; display: grid; place-items: center; color: #2a2f3a; position: relative; }
+.icon .dot { position: absolute; right: 9px; top: 9px; width: 8px; height: 8px; border-radius: 50%; background: transparent; }
+#cloudBtn.syncing svg { animation: pulse 1s ease-in-out infinite; }
+#cloudBtn.error .dot { background: #ef4444; }
+#cloudBtn.ok .dot { background: #22c55e; }
+@keyframes pulse { 50% { opacity: .3; } }
+.pill-sm { font-size: 13px; border: 1px solid #9ccbe8; color: #2b6f99; padding: 4px 10px; border-radius: 14px; background: rgba(255,255,255,.6); }
+
+.dow { flex: none; display: grid; grid-template-columns: repeat(7, 1fr); background: #eaf6fd; border-bottom: 1px solid #cfe7f5; }
+.dow span { text-align: center; padding: 10px 0 11px; font-size: 16px; font-weight: 500; }
+.dow .sun, .dow .sat { color: #9aa3ad; }
+
+#pager { flex: 1; overflow: hidden; position: relative; touch-action: pan-y; }
+#track { display: flex; width: 300%; height: 100%; transform: translateX(-33.3333%); will-change: transform; }
+#track.anim { transition: transform .28s ease-out; }
+.page { width: 33.3333%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-bottom: 90px;
+  background: linear-gradient(180deg, #f2f9fe 0%, #fff 60%); }
+.week { display: grid; grid-template-columns: repeat(7, 1fr); height: 172px; border-bottom: 1px solid #cfe7f5; }
+.cell { border-right: 1px solid #d9eef8; overflow: hidden; min-width: 0; padding-top: 6px; }
+.cell:last-child { border-right: 0; }
+.cell.blank { background: rgba(255,255,255,.35); }
+.cell .n { text-align: center; font-size: 15px; font-weight: 500; color: #1a3a6b; line-height: 1.15; }
+.cell .s { text-align: center; font-size: 12.5px; color: #7d8590; height: 18px; line-height: 18px; white-space: nowrap; overflow: hidden; }
+.cell .s.hol { color: #f0a500; } .cell .s.anniv { color: #c98a00; } .cell .s.term { color: #22a447; } .cell .s.wk { color: #6b7380; }
+.cell.hol .n { color: #e5484d; }
+.cell.today .n { color: #fff; background: #29a8f0; width: 32px; height: 32px; line-height: 32px; border-radius: 50%; margin: -2px auto 0; font-size: 18px; }
+.cell.sel { background: rgba(41,168,240,.08); }
+.items { margin-top: 6px; }
+.it { background: #ececec; margin: 0 1px 4px; padding: 3px 2px 3px 3px; border-radius: 3px; font-size: 12px; line-height: 1.3;
+  white-space: nowrap; overflow: hidden; color: #1d2433; }
+.it.done { color: #FF0000; text-decoration: line-through; }
+.it span[style*="color"], .txt span[style*="color"] { filter: brightness(.78) saturate(1.5); }
+.it span[style*="background"], .txt span[style*="background"] { color: #111 !important; filter: none; border-radius: 2px; }
+
+#fab { position: fixed; right: 22px; bottom: calc(env(safe-area-inset-bottom) + 28px); width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(160deg, #3cc0ff, #1f9fe8); color: #fff; font-size: 30px; line-height: 38px; font-weight: 300;
+  box-shadow: 0 6px 16px rgba(31,159,232,.45); }
+
+
+#dayView { position: fixed; inset: 0; display: flex; flex-direction: column; background: #f7f7f8; z-index: 5; }
+.dtop { flex: none; display: flex; align-items: center; padding: calc(env(safe-area-inset-top) + 10px) 8px 10px; background: #fff; }
+.dtitle { flex: 1; text-align: center; }
+#dayTitle { font-size: 20px; color: #2a2f3a; }
+#daySub { font-size: 13px; color: #a3a9b3; margin-top: 2px; }
+.cardWrap { flex: 1; overflow-y: auto; padding: 18px 18px 14px; }
+#card { background: #fff; border-radius: 18px; min-height: 100%; padding: 14px 0 40px; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+.row { display: flex; align-items: flex-start; gap: 12px; padding: 6px 18px; }
+.chk { flex: none; width: 22px; height: 22px; margin-top: 3px; border-radius: 50%; border: 1.8px solid #a7acb3; position: relative; }
+.row.done .chk { border-color: #29a8f0; background: #29a8f0; }
+.row.done .chk::after { content: ""; position: absolute; left: 6px; top: 2.5px; width: 5px; height: 10px; border: solid #fff; border-width: 0 2.2px 2.2px 0; transform: rotate(45deg); }
+.txt { flex: 1; min-width: 0; font-size: 18px; line-height: 1.45; outline: none; overflow-wrap: anywhere; min-height: 26px; }
+.row.done .txt { color: #8fa0b8; text-decoration: line-through; }
+.txt:empty::before { content: attr(data-ph); color: #c3c8cf; }
+.dbar { flex: none; display: flex; align-items: center; gap: 14px; padding: 8px 18px calc(env(safe-area-inset-bottom) + 14px); background: #f7f7f8; }
+.cbtn { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(160deg, #3cc0ff, #1f9fe8); color: #fff; display: grid; place-items: center;
+  box-shadow: 0 0 0 3px #d9f1ff, 0 4px 10px rgba(31,159,232,.35); }
+.cbtn svg { width: 24px; height: 24px; stroke-width: 2.2; }
+#saveBtn { height: 48px; padding: 0 30px; border-radius: 24px; background: linear-gradient(160deg, #3cc0ff, #1f9fe8); color: #fff; font-size: 18px; font-weight: 600;
+  box-shadow: 0 0 0 3px #d9f1ff, 0 4px 10px rgba(31,159,232,.35); }
+
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 18px 18px 0 0; padding: 14px 18px calc(env(safe-area-inset-bottom) + 18px);
+  box-shadow: 0 -6px 24px rgba(0,0,0,.15); z-index: 8; }
+.sheetTitle { font-size: 13px; color: #7d8590; margin: 6px 0 8px; }
+.swatches { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 6px; }
+.sw { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); }
+.sw.none { background: linear-gradient(135deg, #fff 45%, #e5484d 45%, #e5484d 55%, #fff 55%); }
+
+
+#drawerBg { position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 9; }
+#drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(320px, 86vw); background: #fff; z-index: 10; padding: calc(env(safe-area-inset-top) + 18px) 18px 18px; overflow-y: auto; }
+.dhead { font-size: 20px; font-weight: 600; margin-bottom: 10px; }
+.dsec { font-size: 13px; color: #7d8590; margin: 18px 0 8px; }
+.urow { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; border-radius: 10px; font-size: 17px; text-align: left; }
+.urow.on { background: #e3f4fe; color: #1478b8; font-weight: 600; }
+.urow .ic { width: 30px; height: 30px; border-radius: 50%; background: #d7dde4; display: grid; place-items: center; font-size: 15px; color: #fff; }
+.urow.on .ic { background: #29a8f0; }
+.drow { display: flex; gap: 8px; }
+.drow input { flex: 1; min-width: 0; font: inherit; font-size: 16px; padding: 9px 10px; border: 1px solid #cfd6de; border-radius: 9px; }
+.drow button, .wide { padding: 9px 14px; border-radius: 9px; background: #eaf6fd; color: #1478b8; font-size: 15px; }
+.wide { width: 100%; margin-top: 8px; }
+
+#picker { position: fixed; inset: 0; background: rgba(20,40,60,.45); z-index: 20; display: grid; place-items: center; padding: 20px; }
+.pbox { background: #fff; border-radius: 18px; padding: 22px 18px; width: min(360px, 100%); }
+.ptitle { font-size: 20px; font-weight: 600; margin-bottom: 12px; text-align: center; }
+#setup { position: fixed; inset: 0; background: rgba(20,40,60,.45); z-index: 22; display: grid; place-items: center; padding: 20px; }
+#setup .dsec { margin: 12px 0 6px; }
+#setup .primary { background: linear-gradient(160deg, #3cc0ff, #1f9fe8); color: #fff; font-weight: 600; }
+.err { color: #c62828; line-height: 1.5; }
+
+#toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 100px); transform: translateX(-50%); background: rgba(30,40,55,.92); color: #fff;
+  font-size: 14px; padding: 9px 14px; border-radius: 10px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 30; max-width: 86vw; text-align: center; }
+#toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<!-- 월 달력 -->
+<section id="monthView">
+  <header class="top">
+    <button id="prevBtn" class="arrow" aria-label="지난달"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button id="monthBtn" class="title">2026년 10월 <span class="caret">▾</span></button>
+    <button id="nextBtn" class="arrow" aria-label="다음달"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    <input type="month" id="monthInput" class="hiddenInput">
+    <div class="sp"></div>
+    <button id="todayBtn" class="pill-sm">오늘</button>
+    <button id="cloudBtn" class="icon" aria-label="동기화">
+      <svg viewBox="0 0 24 24"><path d="M7 18.5a4.5 4.5 0 01-.6-8.96A6 6 0 0118 9a4.2 4.2 0 01-.6 9.5z"/></svg>
+      <i class="dot"></i>
+    </button>
+    <button id="menuBtn" class="icon" aria-label="메뉴">
+      <svg viewBox="0 0 24 24"><circle cx="4.5" cy="6" r="1.4" class="f"/><circle cx="4.5" cy="12" r="1.4" class="f"/><circle cx="4.5" cy="18" r="1.4" class="f"/><path d="M9 6h11M9 12h11M9 18h11"/></svg>
+    </button>
+  </header>
+  <div class="dow"><span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="sat">토</span></div>
+  <div id="pager"><div id="track"><div class="page"></div><div class="page"></div><div class="page"></div></div></div>
+  <button id="fab" aria-label="오늘 일정 추가">+</button>
+</section>
+
+<!-- 하루 일정 -->
+<section id="dayView" hidden>
+  <header class="dtop">
+    <button id="backBtn" class="icon" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="dtitle">
+      <button id="dayTitle">2026년 10월 15일 목요일 <span class="caret">▾</span></button>
+      <input type="date" id="dateInput" class="hiddenInput">
+      <div id="daySub">오늘</div>
+    </div>
+    <button id="dayMenuBtn" class="icon" aria-label="메뉴">
+      <svg viewBox="0 0 24 24"><circle cx="4.5" cy="6" r="1.4" class="f"/><circle cx="4.5" cy="12" r="1.4" class="f"/><circle cx="4.5" cy="18" r="1.4" class="f"/><path d="M9 6h11M9 12h11M9 18h11"/></svg>
+    </button>
+  </header>
+  <div class="cardWrap"><div id="card"></div></div>
+  <footer class="dbar">
+    <button class="cbtn" id="doneBtn" aria-label="완료 표시"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+    <button class="cbtn" id="paletteBtn" aria-label="글자색·형광펜"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 100 18c1.2 0 1.6-.9 1.2-1.8-.5-1.1.2-2.2 1.4-2.2H17a4 4 0 004-4c0-5.5-4-10-9-10z"/><circle cx="7.5" cy="11" r="1.2" class="f"/><circle cx="10" cy="7" r="1.2" class="f"/><circle cx="14.5" cy="7" r="1.2" class="f"/></svg></button>
+    <button class="cbtn" id="addRowBtn" aria-label="줄 추가"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    <div class="sp"></div>
+    <button id="saveBtn">저장</button>
+  </footer>
+  <div id="palette" class="sheet" hidden>
+    <div class="sheetTitle">글자색</div><div class="swatches" id="textSw"></div>
+    <div class="sheetTitle">형광펜</div><div class="swatches" id="hlSw"></div>
+  </div>
+</section>
+
+<!-- 메뉴 (사용자) -->
+<div id="drawerBg" hidden></div>
+<aside id="drawer" hidden>
+  <div class="dhead">바탕화면달력</div>
+  <div class="dsec">사용자 선택</div>
+  <div id="userList"></div>
+  <div class="dsec">이름 바꾸기 / 추가</div>
+  <div class="drow"><input id="nameInput" placeholder="사용자 이름" maxlength="30"><button id="renameBtn">변경</button></div>
+  <button id="addUserBtn" class="wide">+ 새 사용자 추가</button>
+  <button id="delUserBtn" class="wide danger">현재 사용자 삭제</button>
+  <div class="dsec">보관된(삭제된) 사용자 — 일정이 그대로 남아 있어 복원할 수 있습니다</div>
+  <div id="deletedList" class="small muted">불러오는 중…</div>
+  <div class="dsec">동기화</div>
+  <div id="syncInfo" class="small"></div>
+  <button id="syncBtn" class="wide">지금 동기화</button>
+  <div class="dsec">서버 연결</div>
+  <div id="connInfo" class="small"></div>
+  <button id="connBtn" class="wide">서버 주소 · 접속 키 바꾸기</button>
+  <button id="installBtn" class="wide" hidden>휴대폰에 앱으로 설치</button>
+  <p class="small muted">PC의 바탕화면 달력과 같은 사용자를 고르면 같은 일정이 보입니다.<br>홈 화면에 추가: 브라우저 메뉴(⋮ 또는 공유) → “홈 화면에 추가”.<br>버전 <span id="ver"></span></p>
+</aside>
+
+<!-- 확인 창 -->
+<div id="confirmBg" hidden>
+  <div class="pbox">
+    <div class="ptitle" id="confirmTitle"></div>
+    <p class="small" id="confirmText" style="line-height:1.6"></p>
+    <div class="drow" style="margin-top:14px"><button id="confirmNo" class="wide" style="margin:0">취소</button><button id="confirmYes" class="wide danger" style="margin:0">삭제</button></div>
+  </div>
+</div>
+<div id="errBox" hidden></div>
+
+<!-- 처음 실행: 사용자 고르기 -->
+<div id="picker" hidden>
+  <div class="pbox">
+    <div class="ptitle">누구의 달력인가요?</div>
+    <div id="pickList"></div>
+    <p class="small muted">나중에 오른쪽 위 메뉴에서 바꿀 수 있습니다.</p>
+  </div>
+</div>
+<!-- 서버 연결: 각자 자기 서버 주소와 접속 키 (이 휴대폰에만 저장) -->
+<div id="setup" hidden>
+  <div class="pbox">
+    <div class="ptitle">내 서버에 연결</div>
+    <p class="small muted">일정은 각자의 구글 드라이브에 저장됩니다. 안내문대로 만든 내 서버의 정보를 넣으세요. 이 휴대폰에만 저장됩니다.</p>
+    <div id="setupUrlRow">
+      <div class="dsec">서버 주소 (…/exec)</div>
+      <div class="drow"><input id="setupUrl" type="url" placeholder="script.google.com/macros/s/…/exec 전체 주소" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    </div>
+    <div class="dsec">접속 키 (서버 setup 실행 로그에 나온 키)</div>
+    <div class="drow"><input id="setupKey" placeholder="접속 키" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    <p id="setupMsg" class="small muted"></p>
+    <div class="drow" style="margin-top:6px"><button id="setupCancel" class="wide" style="margin:0">취소</button><button id="setupOk" class="wide primary" style="margin:0">연결</button></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>(function() {
+    var __KLC = function() {
+        var module = {
+            exports: {}
+        }, exports = module.exports, define;
+        (function(e, t) {
+            typeof exports == `object` && typeof module < `u` ? module.exports = t() : typeof define == `function` && define.amd ? define([], t) : (e = typeof globalThis < `u` ? globalThis : e || self, 
+            e.KoreanLunarCalendar = t());
+        })(this, function() {
+            var e = {
+                KOREAN_LUNAR_MIN_VALUE: 10000101,
+                KOREAN_LUNAR_MAX_VALUE: 20501118,
+                KOREAN_SOLAR_MIN_VALUE: 10000213,
+                KOREAN_SOLAR_MAX_VALUE: 20501231,
+                KOREAN_LUNAR_BASE_YEAR: 1e3,
+                SOLAR_LUNAR_DAY_DIFF: 43,
+                LUNAR_SMALL_MONTH_DAY: 29,
+                LUNAR_BIG_MONTH_DAY: 30,
+                SOLAR_SMALL_YEAR_DAY: 365,
+                SOLAR_BIG_YEAR_DAY: 366,
+                SOLAR_DAYS: [ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 29 ],
+                KOREAN_CHEONGAN: [ 44049, 51012, 48337, 51221, 47924, 44592, 44221, 49888, 51076, 44228 ].map(e => String.fromCharCode(e)),
+                KOREAN_GANJI: [ 51088, 52629, 51064, 47896, 51652, 49324, 50724, 48120, 49888, 50976, 49696, 54644 ].map(e => String.fromCharCode(e)),
+                KOREAN_GAPJA_UNIT: [ 45380, 50900, 51068 ].map(e => String.fromCharCode(e)),
+                CHINESE_CHEONGAN: [ 30002, 20057, 19993, 19969, 25098, 24049, 24218, 36763, 22764, 30328 ].map(e => String.fromCharCode(e)),
+                CHINESE_GANJI: [ 23376, 19985, 23493, 21359, 36784, 24051, 21320, 26410, 30003, 37193, 25100, 20133 ].map(e => String.fromCharCode(e)),
+                CHINESE_GAPJA_UNIT: [ 24180, 26376, 26085 ].map(e => String.fromCharCode(e)),
+                INTERCALATION_STR: [ 50980, 38287 ].map(e => String.fromCharCode(e)),
+                KOREAN_LUNAR_DATA: [ 2194016855, 2197734699, 2193886506, 2194017621, 3271595437, 2193884522, 2194016621, 2197837021, 3267626157, 2193885773, 2197827149, 2193885990, 3271600982, 2194016981, 2193883994, 2197842298, 3267758427, 2193884315, 2197834395, 2193885771, 3271674533, 2193884842, 2194016981, 2197852893, 3267625653, 2194016599, 2197705902, 2194017431, 3267626571, 2197759306, 2194017705, 2197857974, 3267757677, 2193883758, 2197907758, 2193885486, 3267628182, 2197835157, 2193886538, 2197867881, 3267627864, 2194148715, 2197918315, 2193883741, 3267627307, 2197838507, 2193885845, 2193886026, 3271696043, 2193883861, 2197927258, 2194015419, 3267625563, 2197845303, 2193884459, 2193884821, 3271571285, 2193884842, 2198063797, 2193883765, 3267626166, 2197850718, 2193885782, 2193886502, 3271581350, 2194017621, 2193884586, 2197822826, 3267758445, 2197861551, 2193884317, 2193885773, 3271589165, 2193885862, 2194017109, 2197833173, 3267625818, 2194016605, 2197885299, 2193884251, 3271596623, 2193884747, 2193885861, 2197842793, 3267757749, 2193883866, 2197826230, 2194016567, 3271476375, 2194017431, 2193884747, 2197718698, 3267759525, 2193884596, 2198030957, 2193883822, 3267628641, 2197826862, 2193886358, 2197855565, 2193886538, 2194017637, 2197906837, 2194015581, 3267625581, 2197826141, 2193885483, 2197858967, 3267627669, 2193886026, 2197850970, 2194016981, 3267757403, 2197832375, 2193884247, 2193884459, 3271564587, 2193884821, 2197853997, 2193884586, 3267758773, 2197837037, 2193884342, 2194016855, 3271504974, 2193886502, 2197929618, 2194017621, 3267626410, 2197850554, 2194016621, 2193884334, 3271576221, 2193885773, 2193886501, 2197827365, 3267627860, 2198056297, 2193883866, 2194016605, 3271648411, 2193884315, 2193885771, 2197834571, 3267626661, 2197863251, 2193884852, 2194016950, 3271657814, 2194016663, 2193884311, 2197833367, 3267626315, 2197735077, 2194017701, 2193884588, 3271797429, 2193883758, 2193885486, 2197843118, 3267628182, 2193886538, 2197827402, 2194017621, 3271603563, 2194015579, 2193883741, 2197846333, 3267627303, 2193885845, 2197904661, 2193886026, 3267758933, 2197885653, 2194015451, 2197721694, 3267758679, 2193884459, 2197842603, 2193884821, 3267626666, 2197830570, 2194016949, 2197861559, 3267626158, 2194016855, 2197714222, 2193886502, 3267759763, 2197837525, 2193884586, 2194016693, 3271566701, 2193884334, 2197924429, 2193885773, 3267628326, 2197843301, 2193886034, 2194017642, 3271567066, 2194016605, 2197931165, 2193884315, 3267627595, 2197850795, 2193884837, 2193886036, 3271576500, 2194016950, 2194016603, 2197824823, 3267626135, 2197853775, 2193884491, 2193884837, 3271653061, 2193884588, 2194016950, 2197895278, 3267627310, 2197867671, 2193886358, 2193886538, 3271593386, 2194017109, 2193884522, 2197969627, 3267625565, 2193885486, 2197826859, 2193885845, 3271597389, 2193885994, 2194017109, 2197845365, 3267626202, 2194016859, 2197833047, 2193884459, 3271674515, 2193884819, 2193884842, 2197850842, 3267758821, 2193884342, 2197834414, 2194016855, 3267626279, 2197759270, 2194017875, 2197857995, 3267626410, 2194015661, 2197906605, 2193884334, 3267627598, 2197835085, 2193886502, 2197863763, 3267627858, 2194017130, 2197919082, 2194015575, 3267626141, 2197903899, 2193885771, 2193885861, 3271564965, 2193886034, 2197863258, 2194016950, 3267758427, 2197841079, 2193884311, 2193884747, 3271571275, 2193884837, 2197862067, 2193884588, 3267758774, 2197914285, 2193884318, 2193885773, 3271581003, 2193885989, 2193886034, 2197892690, 3267758938, 2197858654, 2194016603, 2193884315, 3271584343, 2193885771, 2193885861, 2197834661, 3267626708, 2197867222, 2194016950, 2194016567, 2197849247, 2193884311, 2193884747, 2197706442, 3267759525, 2193884586, 2197822828, 2194016878, 3271604527, 2193885486, 2193886358, 2197847381, 3267628362, 2194017621, 2197894485, 2193884522, 3267758701, 2197822045, 2193885483, 2197850715, 3267627669, 2193885994, 2197904170, 2194016981, 3267626202, 2197822650, 2194016855, 2197853487, 3267626279, 2193884819, 2197845683, 2193884842, 3267758773, 2197828981, 2193884342, 2197867111, 3267627566, 2193886486, 2197851798, 2193886538, 3267759530, 2197837290, 2194015597, 2193884334, 3271632989, 2193885741, 2197859607, 2193885861, 3267627858, 2197847412, 2194016986, 2194015581, 3271570747, 2193884251, 2193885739, 2197887531, 3267627685, 2197855061, 2193884850, 2194016982, 3271644470, 2194016567, 2193884247, 2197830231, 3267626283, 2197727910, 2194017685, 2193884586, 3271654060, 2194016878, 2193884462, 2197830830, 3267627606, 2197863723, 2193886506, 2194017621, 3271595437, 2193884522, 2194016877, 2197837149, 3267626283, 2193885837, 2197827157, 2193885994, 3271600982, 2194016981, 2193884378, 2197842554, 3267758679, 2193884443, 2197899799, 2193884755, 3271673513, 2193884586, 2194016949, 2197852861, 3267625654, 2194016823, 2197706030, 2193886486, 2194017867, 2197698386, 2194017706, 2197927348, 3267757421, 2193883822, 2197846589, 2193885741, 3267628309, 2197835157, 2193886034, 2197867369, 3267758810, 2194015581, 2197918299, 2193884251, 3267627563, 2197838507, 2193885845, 2193886034, 3271564970, 2194016950, 2197865819, 2194015415, 3267626071, 2197845303, 2193884459, 2193884821, 3271640725, 2193884586, 2197867189, 2194016878, 3267626158, 2197850718, 2193885782, 2193886506, 3271585450, 2194017621, 2193884522, 2197891418, 3267758429, 2197861551, 2193884315, 2193885773, 3271589165, 2193885994, 2194017109, 2197833173, 3267625690, 2194016603, 2197885271, 2193884315, 3271596623, 2193884747, 2193884841, 2197842666, 3267757749, 2193883830, 2197826222, 2194016567, 3271537814, 2193886358, 2194017867, 2197714610, 3267759530, 2194015661, 2197828461, 2193883758, 3267627310, 2197826861, 2193886357, 2197855565, 3267627850, 2194017129, 2197906778, 2194015579, 3267625565, 2197826139, 2193885483, 2197858967, 3267626645, 2193885002, 2197850970, 2194016950, 3267757371, 2197832375, 2193883735, 2193884459, 3271564587, 2193884821, 2197853869, 2193884586, 3267758773, 2197837037, 2193884334, 2194016855, 3271504974, 2193886506, 2197929364, 2194017109, 2193884522, 2197846394, 2194016605, 2193884334, 3271576219, 2193885773, 2193886501, 2197887658, 3267758933, 2197853549, 2193883866, 2194016603, 3271578807, 2193884311, 2193885771, 2197834571, 3267626665, 2197867221, 2194015669, 2193883830, 3271592286, 2194016559, 2193884311, 2197702294, 3267628362, 2197868197, 2194017641, 2194015597, 3271664309, 2193883758, 2193885486, 2197843117, 3267628181, 2193886538, 2197827402, 2194017113, 3271607661, 2194015579, 2193883741, 2197846331, 3267627307, 2193885845, 2197904149, 2193884874, 3267758805, 2197885622, 2194015419, 2197852767, 3267625559, 2193884459, 2197711530, 2194017941, 3267626666, 2197830570, 2194016949, 2197861559, 3267626158, 2194016855, 2197714221, 2193886502, 3267759509, 2197837269, 2193884522, 2194016621, 3271566685, 2193884334, 2197858895, 2193885773, 3267628325, 2197843305, 2194017109, 2193883994, 3271568058, 2194016603, 2197931163, 2193884311, 3267627595, 2197850923, 2193884837, 2193884884, 3271772853, 2193883830, 2194016567, 2197824815, 3267626135, 2197722702, 2193886538, 2194017957, 3271648937, 2194015597, 2193883830, 2197895262, 3267627310, 2197863575, 2193885845, 2193886538, 3271593386, 2194017101, 2194015595, 2197832411, 3267625565, 2193885485, 2197826859, 2193885845, 3271596877, 2193884842, 2194016981, 2197841269, 3267757243, 2193883739, 2197894231, 2193884459, 3271539348, 2194017941, 2193884842, 2197850842, 3267758517, 2193884342, 2197834414, 2194016847, 3267495206, 2197892390, 2194017621, 2197923241, 3267626346, 2194016621, 2197906589, 2193884318, 3267627597, 2197835085, 2193886501, 2197863763, 3267627860, 2194017114, 2197915994, 2194016603, 3267626139, 2197834391, 2193885771, 2193885861, 3271564965, 2193884884, 2197994203, 2193883830, 3267758391, 2197841071, 2193884311, 2193884747, 3271440202, 2194017701, 2197862069, 2194015597, 3267625646, 2197846334, 2193885486, 2193886358, 3271646485, 2193886538, 2194017701, 2197894485, 3267626346, 2197846650, 2194016861, 2193885485, 3271584427, 2193885845, 2193886026, 2197834666, 3267758805, 2193884506, 2197891258, 2194016859, 3271587127, 2193884459, 2193884819, 2197903125, 3267626666, 2194016981, 2197829045, 2193884342, 3271592542, 2193885774, 2193886502, 2197843622, 3267628370, 2194017706, 2197898858, 2194015597, 3267626158, 2197830301, 2193885773, 2197847339, 3267627813, 2193886546, 2197904724, 2194017114, 3267757405, 2197828955, 2193884315, 2197845591, 2193885771, 2193885861, 2197842789, 2193884882, 3267758810, 2197833142, 2194016567, 2193884311, 3271571095, 2193884749, 2197714602, 2194017701, 3267626410, 2197838572, 2194016942, 2193885486, 3271572782, 2193886358, 2197916997, 2193886538, 3267759445, 2197906837, 2193884522, 2194016877, 3271574877, 2193884461, 2193885845, 2197896341, 3267627850, 2197912394, 2194016981, 2193884506, 3271645754, 2194016859, 2193884459, 2197899799, 3267626643, 2197853867, 2193884842, 2194016949, 3271582965, 2193884342, 2194016855, 2197701934, 3267628310, 2194017939, 2197698386, 2194017706, 3271652778, 2194015597, 2193884334, 2197903901, 3267627565, 2193886485, 2197835173, 2193886034, 3271597418, 2194016986, 2194015581, 2197906075, 3267626075, 2193885739, 2197838635, 2193885845, 3267627858, 2197891762, 2194016982, 2197910870, 3267757367, 2193884247, 2197837399, 2193884459, 3267626645, 2197829525, 2193884586, 2197858998, 3267758701, 2193884334, 2197842542, 2193885782, 3267628330, 2197839530, 2194017621, 2193884586, 3271572330, 2194016877, 2197845181, 2193884331, 3267627661, 2197839189, 2193885994, 2194017109, 3271574997, 2193884378, 2194016605, 2197824855, 3267626139, 2197842583, 2193884747, 2193884841, 2197834666, 2194015925, 2193883834, 2197826230, 3267758391, 2197710126, 2193886486, 2194017867, 3271448274, 2194017705, 2194015669, 2197828461, 3267625646, 2193885742, 2197827117, 2193886357, 3271585109, 2193886034, 2194017129, 2197833178, 3267757405, 2193883741, 2197830235, 2193885739, 3271654027, 2193885845, 2193886026, 2197904170, 3267758805, 2194015579, 2197832375, 2193883735, 3271595311, 2193884459, 2193884821, 2197841621, 3267626410, 2194016949, 2197833069, 2193884334, 3267758679, 2197763158, 2193886506, 2197913226, 3267759445, 2193884586, 2197838554, 2194016605, 3267626158, 2197834411, 2193885773, 2197851435, 3267627817, 2194017109, 2197845365, 2193883866, 3267758429, 2197837015, 2193884315, 2193885771, 3271637579, 2193884841, 2197850841, 2194015925, 3267625654, 2197903670, 2194016567, 2193884311, 3271444118, 2193886794, 2197860006, 2194017705, 3267757485, 2197906093, 2193883822, 2193885486, 3271580845, 2193886357, 2193886538, 2197896522, 3267758953, 2197845370, 2194015579, 2193883741, 3271579995, 2193885483, 2193885845, 2197835157, 3267627850, 2194017109, 2197825237, 2194015579, 3271582327, 2193883735, 2193884459, 2197707434, 3267759765, 2193884842, 2197830570, 2194016949, 2197849277, 2193884334, 2194016855, 2197706061, 3267628326, 2194017685, 2197898837, 2193884522, 3267758509, 2197824861, 2193884334, 2197842523, 3267627597, 2193886501, 2197839273, 2194017109, 3267626346, 2197826266, 2194016605, 2197845179, 3267626139, 2193885771, 2197838667, 2193884841, 3267627732, 2197965749, 2193883830, 2194016603, 3271566647, 2193884311, 2197710422, 2193886794, 3267759781, 2197903017, 2194015669, 2193883830, 3271637166, 2193885486, 2197912717, 2193886357, 3267628362, 2197908874, 2194017129, 2194015597, 3271639643, 2193883741, 2193885485, 2197826859, 3267627669, 2197847381, 2193886026, 2194017109, 3271644501, 2194015451, 2193883739, 2197895255, 3267626283, 2197850779, 2193884821, 2193884842, 3271584490, 2194016949, 2193884342, 2197834414, 3267758679, 2193884455, 2197698342, 2194017685, 3271587509, 2193884522, 2194016685, 2197837021, 3267626158, 2193885774, 2197835085, 2193886501, 3271593305, 2193886036, 2194017642, 2197907802, 3267758427, 2193884315, 2197834395, 2193885771, 3271600935, 2193884837, 2193884884, 2197973877, 3267625654, 2194016603, 2197836983, 2193884311, 3267626571, 2197698378, 2194017957, 2197849817, 3267757485, 2193883830, 2197838190, 2193885486, 3267628182, 2197835413, 2193886538, 2194017701, 3271567189, 2193884524, 2197977787, 2193883741, 3267627309, 2197839019, 2193885845, 2193886026, 3271637834, 2194017109, 2197853533, 2193884346, 3267758683, 2197837143, 2193884459, 2193885845, 3271576469, 2193884842, 2194016981, 2197825205, 3267626166, 2197842542, 2194016855, 2193884455, 3271448230, 2194017683, 2193884586, 2197830506, 3267758445, 2197861551, 2193884334, 2193885773, 3271650573, 2193886501, 2193886546, 2197839316, 3267758954, 2194016621, 2197824859, 2193884315, 3271588439, 2193885771, 2193885989, 2197904165, 3267626708, 2194016986, 2197895350 ]
+            }, t = {
+                YEAR_CHEONGAN: 6,
+                YEAR_GANJI: 0,
+                MONTH_CHEONGAN: 3,
+                MONTH_GANJI: 1,
+                DAY_CHEONGAN: 4,
+                DAY_GANJI: 2
+            };
+            return class {
+                constructor() {
+                    this.cumulativeLunarYearDays = new Map, this.cumulativeSolarYearDays = new Map, 
+                    this.solarCalendar = {
+                        year: 0,
+                        month: 0,
+                        day: 0
+                    }, this.lunarCalendar = {
+                        year: 0,
+                        month: 0,
+                        day: 0,
+                        intercalation: !1
+                    };
+                    let e = new Date;
+                    this.setSolarDate(e.getFullYear(), e.getMonth() + 1, e.getDate());
+                }
+                getLunarData(t) {
+                    return e.KOREAN_LUNAR_DATA[t - e.KOREAN_LUNAR_BASE_YEAR];
+                }
+                getLunarIntercalationMonth(e) {
+                    return e >> 12 & 15;
+                }
+                getLunarYearDays(e) {
+                    return this.getLunarData(e) >> 17 & 511;
+                }
+                getLunarMonthDays(t, n, r) {
+                    let i = this.getLunarData(t);
+                    return (r && this.getLunarIntercalationMonth(i) === n ? (i >> 16 & 1) > 0 : (i >> 12 - n & 1) > 0) ? e.LUNAR_BIG_MONTH_DAY : e.LUNAR_SMALL_MONTH_DAY;
+                }
+                getLunarDaysBeforeBaseYear(e) {
+                    return this.accumulateYearDays(e, this.cumulativeLunarYearDays, e => this.getLunarYearDays(e));
+                }
+                getLunarDaysBeforeBaseMonth(t, n, r) {
+                    let i = 0;
+                    if (t >= e.KOREAN_LUNAR_BASE_YEAR && n > 0) {
+                        for (let e = 1; e < n + 1; e++) i += this.getLunarMonthDays(t, e, !1);
+                        if (r) {
+                            let e = this.getLunarIntercalationMonth(this.getLunarData(t));
+                            e > 0 && e < n + 1 && (i += this.getLunarMonthDays(t, e, !0));
+                        }
+                    }
+                    return i;
+                }
+                getLunarAbsDays(e, t, n, r) {
+                    let i = this.getLunarDaysBeforeBaseYear(e - 1) + this.getLunarDaysBeforeBaseMonth(e, t - 1, !0) + n;
+                    return r && this.getLunarIntercalationMonth(this.getLunarData(e)) === t && (i += this.getLunarMonthDays(e, t, !1)), 
+                    i;
+                }
+                isSolarIntercalationYear(e) {
+                    return (e >> 30 & 1) > 0;
+                }
+                getSolarYearDays(t) {
+                    return this.isSolarIntercalationYear(this.getLunarData(t)) ? e.SOLAR_BIG_YEAR_DAY : e.SOLAR_SMALL_YEAR_DAY;
+                }
+                getSolarMonthDays(t, n) {
+                    return n === 2 && this.isSolarIntercalationYear(this.getLunarData(t)) ? e.SOLAR_DAYS[12] : e.SOLAR_DAYS[n - 1];
+                }
+                getSolarDaysBeforeBaseYear(e) {
+                    return this.accumulateYearDays(e, this.cumulativeSolarYearDays, e => this.getSolarYearDays(e));
+                }
+                accumulateYearDays(t, n, r) {
+                    let i = n.get(t);
+                    if (i !== void 0) return i;
+                    let a = e.KOREAN_LUNAR_BASE_YEAR, o = n.get(t - 1), s = 0;
+                    if (o !== void 0 && t > a) s = o + r(t); else for (let e = a; e < t + 1; e++) s += r(e);
+                    return n.set(t, s), s;
+                }
+                getSolarDaysBeforeBaseMonth(e, t) {
+                    let n = 0;
+                    for (let r = 1; r < t + 1; r++) n += this.getSolarMonthDays(e, r);
+                    return n;
+                }
+                getSolarAbsDays(t, n, r) {
+                    return this.getSolarDaysBeforeBaseYear(t - 1) + this.getSolarDaysBeforeBaseMonth(t, n - 1) + r - e.SOLAR_LUNAR_DAY_DIFF;
+                }
+                setSolarDateByLunarDate(e, t, n, r) {
+                    let i = this.getLunarAbsDays(e, t, n, r), a = i < this.getSolarAbsDays(e + 1, 1, 1) ? e : e + 1, o = 0, s = 0;
+                    for (let e = 12; e > 0; e--) {
+                        let t = this.getSolarAbsDays(a, e, 1);
+                        if (i >= t) {
+                            o = e, s = i - t + 1;
+                            break;
+                        }
+                    }
+                    this.solarCalendar = {
+                        year: a,
+                        month: o,
+                        day: s
+                    };
+                }
+                setLunarDateBySolarDate(e, t, n) {
+                    let r = this.getSolarAbsDays(e, t, n), i = r >= this.getLunarAbsDays(e, 1, 1, !1) ? e : e - 1, a = 0, o = 0, s = !1;
+                    for (let e = 12; e > 0; e--) if (r >= this.getLunarAbsDays(i, e, 1, !1)) {
+                        a = e, this.getLunarIntercalationMonth(this.getLunarData(i)) === e && (s = r >= this.getLunarAbsDays(i, e, 1, !0)), 
+                        o = r - this.getLunarAbsDays(i, a, 1, s) + 1;
+                        break;
+                    }
+                    this.lunarCalendar = {
+                        year: i,
+                        month: a,
+                        day: o,
+                        intercalation: s
+                    };
+                }
+                checkValidDate(t, n, r, i, a) {
+                    let o = !1;
+                    if (!Number.isInteger(r) || !Number.isInteger(i) || !Number.isInteger(a)) return !1;
+                    let s = r * 1e4 + i * 100 + a;
+                    if ((t ? e.KOREAN_LUNAR_MIN_VALUE : e.KOREAN_SOLAR_MIN_VALUE) <= s && (t ? e.KOREAN_LUNAR_MAX_VALUE : e.KOREAN_SOLAR_MAX_VALUE) >= s && i > 0 && i < 13 && a > 0) {
+                        if (t && n && this.getLunarIntercalationMonth(this.getLunarData(r)) !== i) return !1;
+                        let e = t ? this.getLunarMonthDays(r, i, n) : this.getSolarMonthDays(r, i);
+                        if (!t && r === 1582 && i === 10 && a > 4 && a < 15) return !1;
+                        a <= e && (o = !0);
+                    }
+                    return o;
+                }
+                setLunarDate(e, t, n, r) {
+                    let i = !1;
+                    return this.checkValidDate(!0, r, e, t, n) && (this.lunarCalendar = {
+                        year: e,
+                        month: t,
+                        day: n,
+                        intercalation: r && this.getLunarIntercalationMonth(this.getLunarData(e)) === t
+                    }, this.setSolarDateByLunarDate(e, t, n, r), i = !0), i;
+                }
+                setSolarDate(e, t, n) {
+                    let r = !1;
+                    return this.checkValidDate(!1, !1, e, t, n) && (this.solarCalendar = {
+                        year: e,
+                        month: t,
+                        day: n
+                    }, this.setLunarDateBySolarDate(e, t, n), r = !0), r;
+                }
+                computeGapJa() {
+                    let n = this.lunarCalendar, r = this.getLunarAbsDays(n.year, n.month, n.day, !!n.intercalation);
+                    if (r <= 0) return {
+                        cheongan: {
+                            year: 0,
+                            month: 0,
+                            day: 0
+                        },
+                        ganji: {
+                            year: 0,
+                            month: 0,
+                            day: 0
+                        }
+                    };
+                    let i = e.KOREAN_LUNAR_BASE_YEAR, a = e.KOREAN_CHEONGAN.length, o = e.KOREAN_GANJI.length, s = n.month + 12 * (n.year - i);
+                    return {
+                        cheongan: {
+                            year: (n.year + t.YEAR_CHEONGAN - i) % a,
+                            month: (s + t.MONTH_CHEONGAN) % a,
+                            day: (r + t.DAY_CHEONGAN) % a
+                        },
+                        ganji: {
+                            year: (n.year + t.YEAR_GANJI - i) % o,
+                            month: (s + t.MONTH_GANJI) % o,
+                            day: (r + t.DAY_GANJI) % o
+                        }
+                    };
+                }
+                getGapJaIndex() {
+                    return this.computeGapJa();
+                }
+                getGapja(t) {
+                    let n = this.getGapJaIndex(), r = t ? e.CHINESE_CHEONGAN : e.KOREAN_CHEONGAN, i = t ? e.CHINESE_GANJI : e.KOREAN_GANJI, a = t ? e.CHINESE_GAPJA_UNIT : e.KOREAN_GAPJA_UNIT, o = t ? `${e.INTERCALATION_STR[1]}${e.CHINESE_GAPJA_UNIT[1]}` : `${e.INTERCALATION_STR[0]}${e.KOREAN_GAPJA_UNIT[1]}`;
+                    return {
+                        year: `${r[n.cheongan.year]}${i[n.ganji.year]}${a[0]}`,
+                        month: `${r[n.cheongan.month]}${i[n.ganji.month]}${a[1]}`,
+                        day: `${r[n.cheongan.day]}${i[n.ganji.day]}${a[2]}`,
+                        intercalation: this.lunarCalendar.intercalation ? o : ``
+                    };
+                }
+                getKoreanGapja() {
+                    return this.getGapja();
+                }
+                getChineseGapja() {
+                    return this.getGapja(!0);
+                }
+                getLunarCalendar() {
+                    return {
+                        ...this.lunarCalendar
+                    };
+                }
+                getSolarCalendar() {
+                    return {
+                        ...this.solarCalendar
+                    };
+                }
+            };
+        });
+        return module.exports;
+    }.call({});
+    var korcal = function() {
+        var module = {
+            exports: {}
+        };
+        var require = function() {
+            return __KLC;
+        };
+        const KoreanLunarCalendar = require("korean-lunar-calendar");
+        const pad = n => String(n).padStart(2, "0");
+        const keyOf = (y, m, d) => `${y}-${pad(m)}-${pad(d)}`;
+        const dateFromKey = k => {
+            const [y, m, d] = k.split("-").map(Number);
+            return new Date(y, m - 1, d);
+        };
+        const keyOfDate = dt => keyOf(dt.getFullYear(), dt.getMonth() + 1, dt.getDate());
+        const addDays = (dt, n) => new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() + n);
+        const lunarCache = new Map;
+        function toLunar(y, m, d) {
+            const k = keyOf(y, m, d);
+            if (lunarCache.has(k)) return lunarCache.get(k);
+            const c = new KoreanLunarCalendar;
+            let r = null;
+            if (c.setSolarDate(y, m, d)) {
+                const l = c.getLunarCalendar();
+                r = {
+                    year: l.year,
+                    month: l.month,
+                    day: l.day,
+                    leap: !!l.intercalation
+                };
+            }
+            lunarCache.set(k, r);
+            return r;
+        }
+        function lunarToSolar(y, m, d, leap = false) {
+            const c = new KoreanLunarCalendar;
+            if (!c.setLunarDate(y, m, d, leap)) return null;
+            const s = c.getSolarCalendar();
+            return new Date(s.year, s.month - 1, s.day);
+        }
+        const TERMS = [ "춘분", "청명", "곡우", "입하", "소만", "망종", "하지", "소서", "대서", "입추", "처서", "백로", "추분", "한로", "상강", "입동", "소설", "대설", "동지", "소한", "대한", "입춘", "우수", "경칩" ];
+        const rad = Math.PI / 180;
+        function sunLongitude(ms) {
+            const jd = ms / 864e5 + 2440587.5 + 69 / 86400;
+            const T = (jd - 2451545) / 36525;
+            const L0 = 280.46646 + 36000.76983 * T + 3032e-7 * T * T;
+            const M = (357.52911 + 35999.05029 * T - 1537e-7 * T * T) * rad;
+            const C = (1.914602 - .004817 * T - 14e-6 * T * T) * Math.sin(M) + (.019993 - 101e-6 * T) * Math.sin(2 * M) + 289e-6 * Math.sin(3 * M);
+            const omega = (125.04 - 1934.136 * T) * rad;
+            const lon = L0 + C - .00569 - .00478 * Math.sin(omega);
+            return (lon % 360 + 360) % 360;
+        }
+        function solarTerm(y, m, d) {
+            const start = Date.UTC(y, m - 1, d) - 9 * 36e5;
+            const a = sunLongitude(start);
+            const b = sunLongitude(start + 864e5);
+            const ia = Math.floor(a / 15), ib = Math.floor(b / 15);
+            if (ia === ib) return null;
+            return TERMS[ib % 24];
+        }
+        const EXTRA_HOLIDAYS = {
+            "2026-06-03": "지방선거",
+            "2028-04-12": "국회의원선거",
+            "2030-06-12": "지방선거"
+        };
+        const holidayCache = new Map;
+        function holidaysOfYear(y) {
+            if (holidayCache.has(y)) return holidayCache.get(y);
+            const map = new Map;
+            const add = (dt, name) => {
+                if (!dt) return;
+                const k = keyOfDate(dt);
+                map.set(k, map.has(k) ? `${map.get(k)}·${name}` : name);
+            };
+            const S = (m, d) => new Date(y, m - 1, d);
+            add(S(1, 1), "신정");
+            const seol = lunarToSolar(y, 1, 1);
+            const seolDays = seol ? [ addDays(seol, -1), seol, addDays(seol, 1) ] : [];
+            seolDays.forEach(dt => add(dt, "설날"));
+            add(S(3, 1), "삼일절");
+            add(S(5, 5), "어린이날");
+            const buddha = lunarToSolar(y, 4, 8);
+            add(buddha, "부처님오신날");
+            add(S(6, 6), "현충일");
+            if (y >= 2026) add(S(7, 17), "제헌절");
+            add(S(8, 15), "광복절");
+            const chuseok = lunarToSolar(y, 8, 15);
+            const chuseokDays = chuseok ? [ addDays(chuseok, -1), chuseok, addDays(chuseok, 1) ] : [];
+            chuseokDays.forEach(dt => add(dt, "추석"));
+            add(S(10, 3), "개천절");
+            add(S(10, 9), "한글날");
+            add(S(12, 25), "성탄절");
+            for (const [k, name] of Object.entries(EXTRA_HOLIDAYS)) if (k.startsWith(`${y}-`)) add(dateFromKey(k), name);
+            const base = new Map(map);
+            const isOff = dt => dt.getDay() === 0 || dt.getDay() === 6 || map.has(keyOfDate(dt));
+            const overlapped = dt => (base.get(keyOfDate(dt)) || "").includes("·");
+            const nextFree = dt => {
+                let n = addDays(dt, 1);
+                while (isOff(n)) n = addDays(n, 1);
+                return n;
+            };
+            const subs = [];
+            if (y >= 2014) {
+                for (const days of [ seolDays, chuseokDays ]) {
+                    if (!days.length) continue;
+                    const cnt = days.filter(dt => dt.getDay() === 0 || overlapped(dt)).length;
+                    let last = days[2];
+                    for (let i = 0; i < cnt; i++) {
+                        last = nextFree(last);
+                        subs.push(last);
+                        map.set(keyOfDate(last), "대체공휴일");
+                    }
+                }
+            }
+            const weekendRule = [];
+            if (y >= 2014) weekendRule.push(S(5, 5));
+            if (y >= 2022) weekendRule.push(S(3, 1));
+            if (y >= 2021) weekendRule.push(S(8, 15), S(10, 3), S(10, 9));
+            if (y >= 2023) {
+                weekendRule.push(S(12, 25));
+                if (buddha) weekendRule.push(buddha);
+            }
+            if (y >= 2026) weekendRule.push(S(7, 17));
+            const seen = new Set;
+            for (const dt of weekendRule) {
+                if (seen.has(keyOfDate(dt))) continue;
+                seen.add(keyOfDate(dt));
+                if (dt.getDay() === 0 || dt.getDay() === 6 || overlapped(dt)) {
+                    const n = nextFree(dt);
+                    map.set(keyOfDate(n), "대체공휴일");
+                }
+            }
+            holidayCache.set(y, map);
+            return map;
+        }
+        function parseCustom(text) {
+            const list = [];
+            for (const raw of String(text || "").split(/\r?\n/)) {
+                const line = raw.trim();
+                if (!line || line.startsWith("#")) continue;
+                const m = line.match(/^(음\s*)?(?:(\d{4})-)?(\d{1,2})-(\d{1,2})\s+(.+?)\s*(!)?$/);
+                if (!m) continue;
+                list.push({
+                    lunar: !!m[1],
+                    year: m[2] ? +m[2] : null,
+                    month: +m[3],
+                    day: +m[4],
+                    name: m[5],
+                    holiday: !!m[6]
+                });
+            }
+            return list;
+        }
+        let customList = [];
+        function setCustom(text) {
+            customList = parseCustom(text);
+        }
+        function customFor(y, m, d, lunar) {
+            return customList.filter(c => {
+                if (c.lunar) return lunar && !lunar.leap && lunar.month === c.month && lunar.day === c.day && (!c.year || c.year === lunar.year);
+                return c.month === m && c.day === d && (!c.year || c.year === y);
+            });
+        }
+        function weekNumber(sunday) {
+            const sat = addDays(sunday, 6);
+            const y = sat.getFullYear();
+            const jan1 = new Date(y, 0, 1);
+            const firstSunday = addDays(jan1, -jan1.getDay());
+            return Math.round((sunday - firstSunday) / (7 * 864e5)) + 1;
+        }
+        function dayInfo(y, m, d) {
+            const dt = new Date(y, m - 1, d);
+            const lunar = toLunar(y, m, d);
+            const holiday = holidaysOfYear(y).get(keyOf(y, m, d)) || null;
+            const custom = customFor(y, m, d, lunar);
+            return {
+                key: keyOf(y, m, d),
+                dow: dt.getDay(),
+                lunar: lunar,
+                lunarText: lunar ? `(음)${lunar.leap ? "윤" : ""}${lunar.month}.${lunar.day}` : "",
+                holiday: holiday,
+                term: solarTerm(y, m, d),
+                custom: custom.map(c => ({
+                    name: c.name,
+                    holiday: c.holiday
+                }))
+            };
+        }
+        module.exports = {
+            dayInfo: dayInfo,
+            weekNumber: weekNumber,
+            setCustom: setCustom,
+            keyOf: keyOf,
+            keyOfDate: keyOfDate,
+            addDays: addDays,
+            dateFromKey: dateFromKey,
+            holidaysOfYear: holidaysOfYear,
+            solarTerm: solarTerm
+        };
+        return module.exports;
+    }();
+    const ALLOWED = new Set([ "B", "STRONG", "I", "EM", "U", "S", "STRIKE", "SPAN", "BR" ]);
+    function sanitize(html) {
+        const doc = (new DOMParser).parseFromString(`<div>${html || ""}</div>`, "text/html");
+        const root = doc.body.firstChild;
+        const walk = node => {
+            for (const child of [ ...node.childNodes ]) {
+                if (child.nodeType === 3) continue;
+                if (child.nodeType !== 1) {
+                    child.remove();
+                    continue;
+                }
+                walk(child);
+                let el = child;
+                if (el.tagName === "FONT") {
+                    const span = doc.createElement("span");
+                    if (el.getAttribute("color")) span.style.color = el.getAttribute("color");
+                    span.append(...el.childNodes);
+                    el.replaceWith(span);
+                    el = span;
+                }
+                if (!ALLOWED.has(el.tagName)) {
+                    if (el.tagName === "DIV" || el.tagName === "P") el.after(doc.createElement("br"));
+                    el.replaceWith(...el.childNodes);
+                    continue;
+                }
+                const {color: color, backgroundColor: bg, fontWeight: fw, fontFamily: ff} = el.style;
+                for (const a of [ ...el.attributes ]) el.removeAttribute(a.name);
+                if (color) el.style.color = color;
+                if (bg && bg !== "transparent" && bg !== "rgba(0, 0, 0, 0)") el.style.backgroundColor = bg;
+                if (fw && fw !== "normal" && fw !== "400") el.style.fontWeight = fw;
+                if (ff) el.style.fontFamily = ff;
+                if (el.tagName === "SPAN" && !el.getAttribute("style")) el.replaceWith(...el.childNodes);
+            }
+        };
+        walk(root);
+        return root.innerHTML.replace(/(<br>)+$/, "");
+    }
+    function hexToRgba(hex, a) {
+        const h = hex.replace("#", "");
+        const n = parseInt(h.length === 3 ? h.split("").map(c => c + c).join("") : h, 16);
+        return `rgba(${n >> 16 & 255}, ${n >> 8 & 255}, ${n & 255}, ${a})`;
+    }
+    const pad2 = n => String(n).padStart(2, "0");
+    const keyOf = (y, m, d) => `${y}-${pad2(m)}-${pad2(d)}`;
+    const DOW = [ "일", "월", "화", "수", "목", "금", "토" ];
+    const fontStack = name => `"${name || "맑은 고딕"}", "Malgun Gothic", sans-serif`;
+    function fileUrl(p) {
+        return "file:" + "/".repeat(3) + p.replace(/\\/g, "/").split("/").map(encodeURIComponent).join("/").replace(/^([A-Za-z])%3A/, "$1:");
+    }
+    function itemsHtml(items) {
+        return items.map(it => `<li${it.id ? ` data-id="${String(it.id).replace(/[^\w-]/g, "")}"` : ""}${it.d ? ' class="done"' : ""}>${sanitize(it.h)}</li>`).join("");
+    }
+    var DAY_MERGE = function() {
+        var KEEP_DELETED_MS = 180 * 24 * 3600 * 1e3;
+        function hash(s) {
+            var h = 5381;
+            for (var i = 0; i < s.length; i++) h = (h * 33 ^ s.charCodeAt(i)) >>> 0;
+            return h.toString(36);
+        }
+        function newId() {
+            return "i" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        }
+        function normalize(key, day) {
+            if (!day) return null;
+            var seen = {};
+            var items = (day.items || []).map(function(it) {
+                if (it.id) return it;
+                var base = "L" + hash(key + "|" + (it.h || ""));
+                var n = seen[base] = (seen[base] || 0) + 1;
+                return {
+                    id: n > 1 ? base + "_" + n : base,
+                    h: it.h,
+                    d: !!it.d,
+                    t: it.t || day.t || 0
+                };
+            });
+            return {
+                items: items,
+                t: day.t || 0,
+                del: day.del || {}
+            };
+        }
+        function mergeDay(key, a, b) {
+            a = normalize(key, a);
+            b = normalize(key, b);
+            if (!a) return b;
+            if (!b) return a;
+            var del = {}, k;
+            for (k in a.del) del[k] = a.del[k];
+            for (k in b.del) if (!(del[k] >= b.del[k])) del[k] = b.del[k];
+            var best = {};
+            a.items.concat(b.items).forEach(function(it) {
+                var cur = best[it.id];
+                if (!cur || (it.t || 0) > (cur.t || 0)) best[it.id] = it;
+            });
+            var first = (b.t || 0) > (a.t || 0) ? b : a, second = first === a ? b : a;
+            var order = [], used = {};
+            first.items.concat(second.items).forEach(function(it) {
+                if (!used[it.id]) {
+                    used[it.id] = 1;
+                    order.push(it.id);
+                }
+            });
+            var now = Date.now();
+            for (k in del) if (now - del[k] > KEEP_DELETED_MS) delete del[k];
+            var items = order.map(function(id) {
+                return best[id];
+            }).filter(function(it) {
+                return !(del[it.id] >= (it.t || 0));
+            });
+            return {
+                items: items,
+                t: Math.max(a.t || 0, b.t || 0),
+                del: del
+            };
+        }
+        function applyEdit(key, curDay, edited, now, base) {
+            var cur = normalize(key, curDay) || {
+                items: [],
+                t: 0,
+                del: {}
+            };
+            var curById = {}, baseById = {};
+            cur.items.forEach(function(it) {
+                curById[it.id] = it;
+            });
+            (base || cur.items).forEach(function(it) {
+                if (it.id) baseById[it.id] = it;
+            });
+            var used = {}, changed = false;
+            var mapped = edited.map(function(e) {
+                var b = e.id && !used[e.id] ? baseById[e.id] : null;
+                if (b) {
+                    used[e.id] = 1;
+                    var latest = curById[e.id];
+                    if (b.h === e.h && !!b.d === !!e.d) {
+                        if (latest) return latest;
+                        if (cur.del[e.id]) return null;
+                    }
+                    changed = true;
+                    return {
+                        id: e.id,
+                        h: e.h,
+                        d: !!e.d,
+                        t: now
+                    };
+                }
+                changed = true;
+                var id = newId();
+                used[id] = 1;
+                return {
+                    id: id,
+                    h: e.h,
+                    d: !!e.d,
+                    t: now
+                };
+            });
+            var ids = mapped.map(function(it) {
+                return it ? it.id : null;
+            });
+            var items = mapped.filter(Boolean);
+            var del = {};
+            for (var k in cur.del) del[k] = cur.del[k];
+            for (var bid in baseById) if (!used[bid] && curById[bid]) {
+                del[bid] = now;
+                changed = true;
+            }
+            cur.items.forEach(function(it) {
+                if (!used[it.id] && !baseById[it.id]) {
+                    items.push(it);
+                    used[it.id] = 1;
+                }
+            });
+            var orderChanged = cur.items.length !== items.length || cur.items.some(function(it, i) {
+                return it.id !== items[i].id;
+            });
+            if (!changed && !orderChanged) return {
+                day: curDay,
+                changed: false,
+                ids: ids
+            };
+            return {
+                day: {
+                    items: items,
+                    t: now,
+                    del: del
+                },
+                changed: true,
+                ids: ids
+            };
+        }
+        return {
+            mergeDay: mergeDay,
+            applyEdit: applyEdit,
+            normalize: normalize
+        };
+    }();
+    if (typeof module !== "undefined") module.exports = DAY_MERGE;
+    window.addEventListener("error", e => {
+        const box = document.getElementById("errBox");
+        if (!box) return;
+        box.hidden = false;
+        box.textContent = `오류가 났습니다. 이 내용을 알려 주세요:\n${e.message} (${(e.filename || "").split("/").pop()}:${e.lineno})`;
+    });
+    (function() {
+        const $ = s => document.querySelector(s);
+        const VERSION = "1.5.0";
+        const LS = {
+            get(k, d) {
+                try {
+                    const v = localStorage.getItem(k);
+                    return v ? JSON.parse(v) : d;
+                } catch (e) {
+                    return d;
+                }
+            },
+            set(k, v) {
+                try {
+                    localStorage.setItem(k, JSON.stringify(v));
+                } catch (e) {}
+            }
+        };
+        const hasGas = typeof google !== "undefined" && google.script && google.script.run;
+        const isPreview = !hasGas && location.protocol === "file:";
+        const isWebApp = !hasGas && !isPreview;
+        let conn = LS.get("dc_conn", {
+            url: "",
+            key: ""
+        });
+        const URL_RE = /^https:\/\/script\.google\.com\/.+\/exec$/;
+        const server = {
+            async call(action, params, c = conn) {
+                const body = {
+                    ...params || {},
+                    action: action,
+                    key: c.key || ""
+                };
+                let r;
+                if (hasGas) {
+                    r = await new Promise((res, rej) => google.script.run.withSuccessHandler(res).withFailureHandler(rej).apiCall(action, body));
+                } else if (isPreview) {
+                    r = await mockCall(action, body);
+                } else {
+                    if (!c.url) throw Object.assign(new Error("서버 주소가 없습니다"), {
+                        code: "setup"
+                    });
+                    const res = await fetch(c.url, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "text/plain;charset=utf-8"
+                        },
+                        body: JSON.stringify(body)
+                    });
+                    const text = await res.text();
+                    try {
+                        r = JSON.parse(text);
+                    } catch (e) {
+                        throw new Error('서버 주소가 웹앱(…/exec) 주소가 아니거나, 액세스가 "모든 사용자"로 배포되지 않았습니다');
+                    }
+                }
+                if (!r || !r.ok) throw Object.assign(new Error(r && r.error || "서버 오류"), {
+                    code: r && r.code
+                });
+                return r;
+            }
+        };
+        function mockCall(action, p) {
+            const db = LS.get("mock_server", null) || {
+                users: [ {
+                    id: "u1",
+                    name: "사용자1"
+                }, {
+                    id: "u2",
+                    name: "사용자2"
+                } ],
+                data: {}
+            };
+            const save = () => LS.set("mock_server", db);
+            const fns = {
+                users: () => ({
+                    users: db.users
+                }),
+                addUser: () => {
+                    const id = "u" + (db.users.length + 1);
+                    db.users.push({
+                        id: id,
+                        name: p.name || "사용자" + (db.users.length + 1)
+                    });
+                    save();
+                    return {
+                        users: db.users
+                    };
+                },
+                renameUser: () => {
+                    const u = db.users.find(x => x.id === p.id);
+                    if (u) u.name = p.name;
+                    save();
+                    return {
+                        users: db.users
+                    };
+                },
+                deleteUser: () => {
+                    if (db.users.length <= 1) throw new Error("마지막 사용자는 삭제할 수 없습니다");
+                    const u = db.users.find(x => x.id === p.id);
+                    (db.deleted = db.deleted || []).push({
+                        ...u,
+                        deletedAt: Date.now()
+                    });
+                    db.users = db.users.filter(x => x.id !== p.id);
+                    save();
+                    return {
+                        users: db.users
+                    };
+                },
+                syncSettings: () => ({
+                    values: (db.settings || {})[p.user] || {}
+                }),
+                deletedUsers: () => ({
+                    deleted: (db.deleted || []).map(u => ({
+                        ...u,
+                        days: Object.keys(db.data[u.id] || {}).length,
+                        lastModified: Date.now()
+                    }))
+                }),
+                restoreUser: () => {
+                    const u = (db.deleted || []).find(x => x.id === p.id);
+                    db.users.push({
+                        id: u.id,
+                        name: u.name
+                    });
+                    db.deleted = db.deleted.filter(x => x.id !== p.id);
+                    save();
+                    return {
+                        users: db.users
+                    };
+                },
+                sync: () => {
+                    const d = db.data[p.user] || (db.data[p.user] = {});
+                    for (const k in p.days) d[k] = DAY_MERGE.mergeDay(k, d[k], p.days[k]);
+                    save();
+                    return {
+                        days: d
+                    };
+                }
+            };
+            return new Promise(r => setTimeout(() => {
+                try {
+                    r({
+                        ok: true,
+                        ...JSON.parse(JSON.stringify(fns[action]()))
+                    });
+                } catch (e) {
+                    r({
+                        ok: false,
+                        error: e.message
+                    });
+                }
+            }, 250));
+        }
+        let users = LS.get("dc_users", []);
+        let userId = LS.get("dc_user", "");
+        let data = {
+            days: {}
+        };
+        const now = new Date;
+        let ym = {
+            y: now.getFullYear(),
+            m: now.getMonth() + 1
+        };
+        let dayKey = null;
+        const loadData = () => {
+            data = LS.get("dc_data_" + userId, {
+                days: {}
+            });
+            korcal.setCustom(LS.get("dc_custom_" + userId, ""));
+        };
+        const saveData = () => LS.set("dc_data_" + userId, data);
+        const todayKey = () => {
+            const t = new Date;
+            return keyOf(t.getFullYear(), t.getMonth() + 1, t.getDate());
+        };
+        function toast(msg, ms = 2200) {
+            const t = $("#toast");
+            t.textContent = msg;
+            t.classList.add("show");
+            clearTimeout(toast.t);
+            toast.t = setTimeout(() => t.classList.remove("show"), ms);
+        }
+        let syncing = null, syncAgain = false;
+        function setCloud(state) {
+            const b = $("#cloudBtn");
+            b.classList.remove("syncing", "ok", "error");
+            if (state) b.classList.add(state);
+        }
+        async function sync(showToast) {
+            if (!userId) return;
+            if (syncing) {
+                syncAgain = true;
+                return syncing;
+            }
+            setCloud("syncing");
+            const uid = userId;
+            syncing = (async () => {
+                try {
+                    const {days: days} = await server.call("sync", {
+                        user: uid,
+                        days: data.days
+                    });
+                    if (uid !== userId) return;
+                    let changed = false;
+                    for (const k in days) {
+                        const cur = data.days[k];
+                        const merged = DAY_MERGE.mergeDay(k, cur, days[k]);
+                        if (JSON.stringify(merged) !== JSON.stringify(cur)) {
+                            data.days[k] = merged;
+                            changed = true;
+                        }
+                    }
+                    saveData();
+                    try {
+                        const sv = (await server.call("syncSettings", {
+                            user: uid,
+                            values: {}
+                        })).values;
+                        if (uid === userId) {
+                            const before = LS.get("dc_custom_" + uid, "");
+                            const custom = sv && sv.customDays && sv.customDays.v || "";
+                            LS.set("dc_custom_" + uid, custom);
+                            korcal.setCustom(custom);
+                            if (custom !== before) changed = true;
+                        }
+                    } catch (e) {}
+                    LS.set("dc_last_sync_" + uid, Date.now());
+                    setCloud("ok");
+                    if (changed) renderPages();
+                    if (showToast) toast("동기화 완료");
+                } catch (e) {
+                    setCloud("error");
+                    if (needsSetup(e)) showSetup(e.message); else if (showToast) toast("동기화 실패 — 인터넷 연결을 확인하세요");
+                } finally {
+                    syncing = null;
+                    updateSyncInfo();
+                    if (syncAgain) {
+                        syncAgain = false;
+                        sync();
+                    }
+                }
+            })();
+            return syncing;
+        }
+        const shiftYm = (o, n) => {
+            const d = new Date(o.y, o.m - 1 + n, 1);
+            return {
+                y: d.getFullYear(),
+                m: d.getMonth() + 1
+            };
+        };
+        const esc = s => String(s).replace(/[&<>"]/g, c => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;"
+        }[c]));
+        function monthHtml({y: y, m: m}) {
+            const first = new Date(y, m - 1, 1);
+            const last = new Date(y, m, 0).getDate();
+            const weeks = Math.ceil((first.getDay() + last) / 7);
+            const tk = todayKey();
+            let html = "";
+            for (let w = 0; w < weeks; w++) {
+                html += '<div class="week">';
+                for (let i = 0; i < 7; i++) {
+                    const d = w * 7 + i - first.getDay() + 1;
+                    if (d < 1 || d > last) {
+                        html += '<div class="cell blank"></div>';
+                        continue;
+                    }
+                    const info = korcal.dayInfo(y, m, d);
+                    let sub = `<div class="s">${info.lunarText}</div>`;
+                    const customHol = info.custom.some(c => c.holiday);
+                    if (info.holiday) sub = `<div class="s hol">${esc(info.holiday)}</div>`; else if (info.custom.length) sub = `<div class="s ${customHol ? "hol" : "anniv"}">${esc(info.custom.map(c => c.name).join("·"))}</div>`; else if (info.term) sub = `<div class="s term">${info.term}</div>`; else if (i === 0) sub = `<div class="s wk">${korcal.weekNumber(new Date(y, m - 1, d))}주차</div>`;
+                    const items = (data.days[info.key] || {}).items || [];
+                    const cls = [ "cell" ];
+                    if (info.holiday || customHol) cls.push("hol");
+                    if (info.key === tk) cls.push("today");
+                    html += `<div class="${cls.join(" ")}" data-key="${info.key}"><div class="n">${d}</div>${sub}<div class="items">${items.map(it => `<div class="it${it.d ? " done" : ""}">${sanitize(it.h)}</div>`).join("")}</div></div>`;
+                }
+                html += "</div>";
+            }
+            return html;
+        }
+        function renderPages() {
+            const pages = document.querySelectorAll(".page");
+            [ -1, 0, 1 ].forEach((o, i) => {
+                pages[i].innerHTML = monthHtml(shiftYm(ym, o));
+            });
+            $("#monthBtn").innerHTML = `${ym.y}년 ${ym.m}월 <span class="caret">▾</span>`;
+        }
+        function goMonth(target) {
+            ym = target;
+            renderPages();
+            document.querySelectorAll(".page").forEach(p => {
+                p.scrollTop = 0;
+            });
+            scrollToToday();
+        }
+        function scrollToToday() {
+            const t = document.querySelectorAll(".page")[1].querySelector(".cell.today");
+            if (t) t.parentElement.scrollIntoView({
+                block: "nearest"
+            });
+        }
+        let slideMonth = () => {};
+        (function swipe() {
+            const pager = $("#pager"), track = $("#track");
+            let sx = 0, sy = 0, dx = 0, axis = null, t0 = 0, busy = false;
+            const W = () => pager.clientWidth;
+            pager.addEventListener("touchstart", e => {
+                if (busy) return;
+                sx = e.touches[0].clientX;
+                sy = e.touches[0].clientY;
+                dx = 0;
+                axis = null;
+                t0 = Date.now();
+                track.classList.remove("anim");
+            }, {
+                passive: true
+            });
+            pager.addEventListener("touchmove", e => {
+                if (busy) return;
+                const x = e.touches[0].clientX - sx, y = e.touches[0].clientY - sy;
+                if (!axis && (Math.abs(x) > 8 || Math.abs(y) > 8)) axis = Math.abs(x) > Math.abs(y) ? "x" : "y";
+                if (axis !== "x") return;
+                e.preventDefault();
+                dx = x;
+                track.style.transform = `translateX(calc(-33.3333% + ${dx}px))`;
+            }, {
+                passive: false
+            });
+            pager.addEventListener("touchend", () => {
+                if (axis !== "x") return;
+                const fast = Math.abs(dx) > 40 && Date.now() - t0 < 300;
+                const dir = Math.abs(dx) > W() * .22 || fast ? dx < 0 ? 1 : -1 : 0;
+                slide(dir);
+            });
+            function slide(dir) {
+                busy = true;
+                track.classList.add("anim");
+                track.style.transform = `translateX(${-33.3333 - dir * 33.3333}%)`;
+                setTimeout(() => {
+                    track.classList.remove("anim");
+                    if (dir) {
+                        ym = shiftYm(ym, dir);
+                        renderPages();
+                        document.querySelectorAll(".page").forEach(p => {
+                            p.scrollTop = 0;
+                        });
+                    }
+                    track.style.transform = "translateX(-33.3333%)";
+                    busy = false;
+                }, 290);
+            }
+            slideMonth = dir => {
+                if (!busy) slide(dir);
+            };
+            document.addEventListener("keydown", e => {
+                if ($("#dayView").hidden && !busy && (e.key === "ArrowLeft" || e.key === "ArrowRight")) slide(e.key === "ArrowRight" ? 1 : -1);
+            });
+        })();
+        $("#track").addEventListener("click", e => {
+            const c = e.target.closest(".cell[data-key]");
+            if (c) openDay(c.dataset.key);
+        });
+        $("#monthBtn").addEventListener("click", () => {
+            const inp = $("#monthInput");
+            inp.value = `${ym.y}-${String(ym.m).padStart(2, "0")}`;
+            try {
+                inp.showPicker();
+            } catch (e) {
+                inp.focus();
+                inp.click();
+            }
+        });
+        $("#monthInput").addEventListener("change", e => {
+            const [y, m] = e.target.value.split("-").map(Number);
+            if (y && m) goMonth({
+                y: y,
+                m: m
+            });
+        });
+        $("#prevBtn").addEventListener("click", () => slideMonth(-1));
+        $("#nextBtn").addEventListener("click", () => slideMonth(1));
+        $("#todayBtn").addEventListener("click", () => {
+            const t = new Date;
+            goMonth({
+                y: t.getFullYear(),
+                m: t.getMonth() + 1
+            });
+        });
+        $("#cloudBtn").addEventListener("click", () => sync(true));
+        $("#fab").addEventListener("click", () => openDay(todayKey(), true));
+        const DOWS = [ "일", "월", "화", "수", "목", "금", "토" ];
+        function rowEl(it) {
+            const row = document.createElement("div");
+            row.className = "row" + (it.d ? " done" : "");
+            if (it.id) row.dataset.id = it.id;
+            row.innerHTML = '<button class="chk" aria-label="완료"></button><div class="txt" contenteditable="true" data-ph="일정 입력"></div>';
+            row.querySelector(".txt").innerHTML = sanitize(it.h || "");
+            return row;
+        }
+        function openDay(key, focusNew) {
+            dayKey = key;
+            const [y, m, d] = key.split("-").map(Number);
+            const dt = new Date(y, m - 1, d);
+            $("#dayTitle").innerHTML = `${y}년 ${m}월 ${d}일 ${DOWS[dt.getDay()]}요일 <span class="caret">▾</span>`;
+            const t = new Date;
+            t.setHours(0, 0, 0, 0);
+            const diff = Math.round((dt - t) / 864e5);
+            const info = korcal.dayInfo(y, m, d);
+            $("#daySub").textContent = [ diff === 0 ? "오늘" : diff < 0 ? `${-diff}일 전` : `${diff}일 후`, info.lunarText, info.holiday, info.term ].filter(Boolean).join(" · ");
+            const card = $("#card");
+            card.innerHTML = "";
+            const items = (DAY_MERGE.normalize(key, data.days[key]) || {
+                items: []
+            }).items;
+            items.forEach(it => card.appendChild(rowEl(it)));
+            dayBase = [ ...card.querySelectorAll(".row") ].map(r => ({
+                id: r.dataset.id,
+                h: sanitize(r.querySelector(".txt").innerHTML),
+                d: r.classList.contains("done")
+            }));
+            if (!items.length || focusNew) card.appendChild(rowEl({
+                h: ""
+            }));
+            $("#monthView").hidden = true;
+            $("#dayView").hidden = false;
+            $("#palette").hidden = true;
+            if (focusNew || !items.length) focusEnd(card.lastElementChild.querySelector(".txt"));
+        }
+        function collect() {
+            return [ ...document.querySelectorAll("#card .row") ].map(r => ({
+                row: r,
+                it: {
+                    id: r.dataset.id || "",
+                    h: sanitize(r.querySelector(".txt").innerHTML),
+                    d: r.classList.contains("done")
+                }
+            })).filter(({it: it}) => it.h.replace(/<br>|&nbsp;|\s/g, "") !== "");
+        }
+        let dayBase = [];
+        function saveDay(silent) {
+            if (!dayKey) return;
+            const rows = collect();
+            const items = rows.map(r => r.it);
+            const r = DAY_MERGE.applyEdit(dayKey, data.days[dayKey], items, Date.now(), dayBase);
+            rows.forEach((x, i) => {
+                if (r.ids[i]) x.row.dataset.id = r.ids[i];
+            });
+            dayBase = items.map((it, i) => ({
+                ...it,
+                id: r.ids[i] || it.id
+            }));
+            if (r.changed) {
+                data.days[dayKey] = r.day;
+                saveData();
+                sync();
+            }
+            if (!silent) toast("저장됨");
+        }
+        function closeDay() {
+            saveDay(true);
+            dayKey = null;
+            $("#dayView").hidden = true;
+            $("#monthView").hidden = false;
+            renderPages();
+        }
+        function focusEnd(el) {
+            el.focus();
+            const r = document.createRange();
+            r.selectNodeContents(el);
+            r.collapse(false);
+            const s = getSelection();
+            s.removeAllRanges();
+            s.addRange(r);
+        }
+        $("#backBtn").addEventListener("click", closeDay);
+        $("#saveBtn").addEventListener("click", () => {
+            saveDay();
+            closeDay();
+        });
+        $("#dayTitle").addEventListener("click", () => {
+            const inp = $("#dateInput");
+            inp.value = dayKey;
+            try {
+                inp.showPicker();
+            } catch (e) {
+                inp.focus();
+                inp.click();
+            }
+        });
+        $("#dateInput").addEventListener("change", e => {
+            if (!e.target.value) return;
+            saveDay(true);
+            const [y, m] = e.target.value.split("-").map(Number);
+            ym = {
+                y: y,
+                m: m
+            };
+            openDay(e.target.value);
+        });
+        $("#dayMenuBtn").addEventListener("click", openDrawer);
+        $("#card").addEventListener("click", e => {
+            const chk = e.target.closest(".chk");
+            if (chk) {
+                chk.parentElement.classList.toggle("done");
+                return;
+            }
+            if (e.target === $("#card")) {
+                const last = $("#card").lastElementChild;
+                if (last && !last.querySelector(".txt").textContent.trim()) focusEnd(last.querySelector(".txt")); else {
+                    const r = rowEl({
+                        h: ""
+                    });
+                    $("#card").appendChild(r);
+                    focusEnd(r.querySelector(".txt"));
+                }
+            }
+        });
+        $("#card").addEventListener("beforeinput", e => {
+            const txt = e.target.closest && e.target.closest(".txt");
+            if (!txt) return;
+            const row = txt.parentElement;
+            if (e.inputType === "insertParagraph" || e.inputType === "insertLineBreak") {
+                e.preventDefault();
+                const sel = getSelection();
+                const r = sel.getRangeAt(0);
+                const tail = document.createRange();
+                tail.setStart(r.endContainer, r.endOffset);
+                tail.setEnd(txt, txt.childNodes.length);
+                const frag = tail.extractContents();
+                const nr = rowEl({
+                    h: ""
+                });
+                nr.querySelector(".txt").appendChild(frag);
+                row.after(nr);
+                const t = nr.querySelector(".txt");
+                t.focus();
+                const c = document.createRange();
+                c.setStart(t, 0);
+                c.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(c);
+            } else if (e.inputType === "deleteContentBackward" && !txt.textContent.length && row.previousElementSibling) {
+                e.preventDefault();
+                const prev = row.previousElementSibling.querySelector(".txt");
+                row.remove();
+                focusEnd(prev);
+            }
+        });
+        let lastRange = null;
+        document.addEventListener("selectionchange", () => {
+            const s = getSelection();
+            if (s.rangeCount && s.anchorNode && s.anchorNode.parentElement && s.anchorNode.parentElement.closest("#card .txt, #card")) {
+                const n = s.anchorNode.nodeType === 1 ? s.anchorNode : s.anchorNode.parentElement;
+                if (n.closest(".txt")) lastRange = s.getRangeAt(0).cloneRange();
+            }
+        });
+        const currentRow = () => {
+            if (!lastRange) return null;
+            const n = lastRange.startContainer.nodeType === 1 ? lastRange.startContainer : lastRange.startContainer.parentElement;
+            return n && n.closest(".row");
+        };
+        const keepFocus = b => b.addEventListener("mousedown", e => e.preventDefault());
+        [ "#doneBtn", "#paletteBtn", "#addRowBtn" ].forEach(s => keepFocus($(s)));
+        $("#doneBtn").addEventListener("click", () => {
+            const row = currentRow() || $("#card .row");
+            if (row) row.classList.toggle("done");
+        });
+        $("#addRowBtn").addEventListener("click", () => {
+            const r = rowEl({
+                h: ""
+            });
+            const cur = currentRow();
+            if (cur) cur.after(r); else $("#card").appendChild(r);
+            focusEnd(r.querySelector(".txt"));
+        });
+        $("#paletteBtn").addEventListener("click", () => {
+            $("#palette").hidden = !$("#palette").hidden;
+        });
+        const TEXT_COLORS = [ null, "#ff5252", "#ffa726", "#ffee58", "#69f0ae", "#40c4ff", "#b388ff", "#ff80ab" ];
+        const HL_COLORS = [ null, "#fff176", "#b9f6ca", "#ffab91", "#ff9ecb", "#90caf9", "#e1bee7" ];
+        function applyFormat(cmd, color) {
+            const row = currentRow();
+            if (!row) return toast("먼저 꾸밀 글자를 누르거나 선택하세요");
+            const txt = row.querySelector(".txt");
+            const s = getSelection();
+            let r = lastRange;
+            if (!r || r.collapsed) {
+                r = document.createRange();
+                r.selectNodeContents(txt);
+            }
+            txt.focus();
+            s.removeAllRanges();
+            s.addRange(r);
+            document.execCommand("styleWithCSS", false, true);
+            if (cmd === "color") {
+                document.execCommand("foreColor", false, color || "#010101");
+                if (!color) txt.querySelectorAll("span").forEach(sp => {
+                    if (/rgb\(1, 1, 1\)/.test(sp.style.color)) sp.style.color = "";
+                });
+            } else {
+                document.execCommand("hiliteColor", false, color || "transparent");
+            }
+            $("#palette").hidden = true;
+        }
+        function buildSwatches(el, colors, cmd) {
+            colors.forEach(c => {
+                const b = document.createElement("button");
+                b.className = "sw" + (c ? "" : " none");
+                if (c) b.style.background = c;
+                keepFocus(b);
+                b.addEventListener("click", () => applyFormat(cmd, c));
+                el.appendChild(b);
+            });
+        }
+        buildSwatches($("#textSw"), TEXT_COLORS, "color");
+        buildSwatches($("#hlSw"), HL_COLORS, "hl");
+        function renderUsers() {
+            const html = cls => users.map(u => `<button class="urow${u.id === userId ? " on" : ""}" data-id="${u.id}"><span class="ic">${esc(u.name.slice(0, 1))}</span>${esc(u.name)}</button>`).join("");
+            $("#userList").innerHTML = html();
+            $("#pickList").innerHTML = html();
+            const cur = users.find(u => u.id === userId);
+            if (document.activeElement !== $("#nameInput")) $("#nameInput").value = cur ? cur.name : "";
+        }
+        function updateSyncInfo() {
+            const t = LS.get("dc_last_sync_" + userId, 0);
+            $("#syncInfo").textContent = t ? `마지막 동기화: ${new Date(t).toLocaleString("ko-KR")}` : "아직 동기화 안 됨";
+        }
+        function openDrawer() {
+            renderUsers();
+            updateSyncInfo();
+            $("#ver").textContent = VERSION;
+            $("#drawer").hidden = false;
+            $("#drawerBg").hidden = false;
+            $("#connInfo").textContent = connText();
+            server.call("users").then(r => {
+                users = r.users;
+                LS.set("dc_users", users);
+                renderUsers();
+            }).catch(() => {});
+            loadDeleted();
+        }
+        const fmtDate = t => t ? new Date(t).toLocaleDateString("ko-KR") : "-";
+        function loadDeleted() {
+            const box = $("#deletedList");
+            server.call("deletedUsers").then(({deleted: list}) => {
+                box.innerHTML = list.length ? list.map(u => `<div class="del"><div class="info"><b>${esc(u.name)}</b><br>\n        일정 ${u.days}일 · 마지막 수정 ${fmtDate(u.lastModified)} · 삭제 ${fmtDate(u.deletedAt)}</div>\n        <button data-restore="${u.id}">복원</button></div>`).join("") : "없음";
+            }).catch(() => {
+                box.textContent = "불러오지 못했습니다";
+            });
+        }
+        $("#deletedList").addEventListener("click", async e => {
+            const b = e.target.closest("[data-restore]");
+            if (!b) return;
+            try {
+                users = (await server.call("restoreUser", {
+                    id: b.dataset.restore
+                })).users;
+                LS.set("dc_users", users);
+                selectUser(b.dataset.restore);
+                loadDeleted();
+                toast("복원했습니다 — 저장된 일정을 불러옵니다");
+            } catch (err) {
+                toast("복원 실패");
+            }
+        });
+        function confirmBox(title, text) {
+            return new Promise(resolve => {
+                $("#confirmTitle").textContent = title;
+                $("#confirmText").textContent = text;
+                $("#confirmBg").hidden = false;
+                const done = v => {
+                    $("#confirmBg").hidden = true;
+                    $("#confirmYes").onclick = $("#confirmNo").onclick = null;
+                    resolve(v);
+                };
+                $("#confirmYes").onclick = () => done(true);
+                $("#confirmNo").onclick = () => done(false);
+            });
+        }
+        $("#delUserBtn").addEventListener("click", async () => {
+            const cur = users.find(u => u.id === userId);
+            if (!cur) return;
+            if (users.length <= 1) return toast("마지막 사용자는 삭제할 수 없습니다");
+            const ok = await confirmBox(`"${cur.name}" 사용자를 삭제할까요?`, '목록에서만 사라지고 일정은 구글 드라이브에 그대로 보관됩니다. 메뉴의 "보관된 사용자"에서 언제든 복원할 수 있습니다.');
+            if (!ok) return;
+            try {
+                users = (await server.call("deleteUser", {
+                    id: cur.id
+                })).users;
+                LS.set("dc_users", users);
+                selectUser(users[0].id);
+                loadDeleted();
+                toast(`${cur.name} 삭제됨 (일정은 보관)`);
+            } catch (err) {
+                toast(`삭제 실패: ${err.message || err}`);
+            }
+        });
+        function closeDrawer() {
+            $("#drawer").hidden = true;
+            $("#drawerBg").hidden = true;
+        }
+        function selectUser(id) {
+            if (dayKey) saveDay(true);
+            userId = id;
+            LS.set("dc_user", id);
+            loadData();
+            renderUsers();
+            renderPages();
+            $("#picker").hidden = true;
+            if (dayKey) openDay(dayKey);
+            sync();
+        }
+        $("#menuBtn").addEventListener("click", openDrawer);
+        $("#drawerBg").addEventListener("click", closeDrawer);
+        $("#userList").addEventListener("click", e => {
+            const b = e.target.closest(".urow");
+            if (b) {
+                selectUser(b.dataset.id);
+                closeDrawer();
+            }
+        });
+        $("#pickList").addEventListener("click", e => {
+            const b = e.target.closest(".urow");
+            if (b) selectUser(b.dataset.id);
+        });
+        $("#renameBtn").addEventListener("click", async () => {
+            const name = $("#nameInput").value.trim();
+            if (!name || !userId) return;
+            try {
+                users = (await server.call("renameUser", {
+                    id: userId,
+                    name: name
+                })).users;
+                LS.set("dc_users", users);
+                renderUsers();
+                toast("이름을 바꿨습니다");
+            } catch (e) {
+                toast("이름 변경 실패");
+            }
+        });
+        $("#addUserBtn").addEventListener("click", async () => {
+            const name = $("#nameInput").value.trim();
+            try {
+                users = (await server.call("addUser", {
+                    name: users.some(u => u.name === name) ? "" : name
+                })).users;
+                LS.set("dc_users", users);
+                selectUser(users[users.length - 1].id);
+                toast(`${users[users.length - 1].name} 추가됨`);
+            } catch (e) {
+                toast("추가 실패");
+            }
+        });
+        $("#syncBtn").addEventListener("click", () => sync(true));
+        const needsSetup = e => e && (e.code === "key" || e.code === "setup");
+        function connText() {
+            const key = conn.key ? "접속 키 입력됨" : "접속 키 없음";
+            if (hasGas) return `이 서버에 연결됨 · ${key}`;
+            if (isPreview) return "미리보기 (가짜 서버)";
+            if (!conn.url) return "연결 안 됨";
+            const id = conn.url.split("/s/")[1] || "";
+            return `서버 …${id.slice(-14, -5)} · ${key}`;
+        }
+        function showSetup(msg) {
+            $("#setupUrlRow").hidden = !isWebApp;
+            $("#setupUrl").value = conn.url || "";
+            $("#setupKey").value = conn.key || "";
+            $("#setupMsg").textContent = msg || "";
+            $("#setupMsg").className = "small" + (msg ? " err" : " muted");
+            $("#setupCancel").hidden = !(isWebApp ? conn.url : true);
+            $("#picker").hidden = true;
+            $("#setup").hidden = false;
+        }
+        $("#setupCancel").addEventListener("click", () => {
+            $("#setup").hidden = true;
+        });
+        $("#connBtn").addEventListener("click", () => {
+            closeDrawer();
+            showSetup();
+        });
+        $("#setupOk").addEventListener("click", async () => {
+            const next = {
+                url: isWebApp ? $("#setupUrl").value.trim() : "",
+                key: $("#setupKey").value.trim()
+            };
+            const msg = $("#setupMsg");
+            if (isWebApp && !URL_RE.test(next.url)) {
+                msg.className = "small err";
+                msg.textContent = `주소는 https:${"/".repeat(2)}script.google.com/macros/s/…/exec 형식이어야 합니다.`;
+                return;
+            }
+            msg.className = "small muted";
+            msg.textContent = "연결하는 중…";
+            try {
+                const r = await server.call("users", {}, next);
+                if (isWebApp && conn.url && conn.url !== next.url) {
+                    Object.keys(localStorage).filter(k => k.startsWith("dc_")).forEach(k => localStorage.removeItem(k));
+                    userId = "";
+                    loadData();
+                    renderPages();
+                }
+                conn = next;
+                LS.set("dc_conn", conn);
+                users = r.users;
+                LS.set("dc_users", users);
+                $("#setup").hidden = true;
+                toast("서버에 연결했습니다");
+                afterUsers();
+            } catch (e) {
+                msg.className = "small err";
+                msg.textContent = `연결 실패: ${e.message || e}`;
+            }
+        });
+        let installEvt = null;
+        window.addEventListener("beforeinstallprompt", e => {
+            e.preventDefault();
+            installEvt = e;
+            $("#installBtn").hidden = false;
+        });
+        $("#installBtn").addEventListener("click", async () => {
+            if (!installEvt) return;
+            installEvt.prompt();
+            await installEvt.userChoice;
+            installEvt = null;
+            $("#installBtn").hidden = true;
+        });
+        if (isWebApp && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) sync();
+        });
+        setInterval(() => {
+            if (!document.hidden && !dayKey && $("#setup").hidden) sync();
+        }, 6e4);
+        function afterUsers() {
+            if (!users.some(x => x.id === userId)) {
+                userId = "";
+                $("#picker").hidden = false;
+            }
+            renderUsers();
+            if (userId) sync();
+        }
+        loadData();
+        renderPages();
+        setTimeout(scrollToToday, 50);
+        renderUsers();
+        if (isWebApp && !conn.url) {
+            showSetup();
+        } else {
+            server.call("users").then(r => {
+                users = r.users;
+                LS.set("dc_users", users);
+                afterUsers();
+            }).catch(e => {
+                setCloud("error");
+                if (needsSetup(e)) showSetup(e.message); else if (!userId) {
+                    $("#picker").hidden = false;
+                    $("#pickList").innerHTML = '<p class="small muted">서버에 연결할 수 없습니다. 인터넷 연결을 확인하세요.</p>';
+                }
+            });
+            if (!userId && users.length) $("#picker").hidden = false;
+        }
+    })();
+})();</script>
+</body>
+</html>
