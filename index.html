@@ -880,7 +880,7 @@ svg .f { fill: currentColor; stroke: none; }
     });
     (function() {
         const $ = s => document.querySelector(s);
-        const VERSION = "1.5.0";
+        const VERSION = "1.5.1";
         const LS = {
             get(k, d) {
                 try {
@@ -1308,6 +1308,7 @@ svg .f { fill: currentColor; stroke: none; }
             if (!items.length || focusNew) card.appendChild(rowEl({
                 h: ""
             }));
+            if ($("#dayView").hidden) pushLayer();
             $("#monthView").hidden = true;
             $("#dayView").hidden = false;
             $("#palette").hidden = true;
@@ -1343,13 +1344,39 @@ svg .f { fill: currentColor; stroke: none; }
             }
             if (!silent) toast("저장됨");
         }
-        function closeDay() {
+        function hideDay() {
             saveDay(true);
             dayKey = null;
             $("#dayView").hidden = true;
             $("#monthView").hidden = false;
             renderPages();
         }
+        const closeDay = () => goBack(hideDay);
+        const inLayer = () => !!(history.state && history.state.dcLayer);
+        function pushLayer() {
+            try {
+                history.pushState({
+                    dcLayer: true
+                }, "");
+            } catch (e) {}
+        }
+        function goBack(hide) {
+            if (inLayer()) history.back(); else hide();
+        }
+        window.addEventListener("popstate", () => {
+            if (!$("#confirmBg").hidden) {
+                $("#confirmNo").click();
+                pushLayer();
+                return;
+            }
+            if (!$("#palette").hidden) {
+                $("#palette").hidden = true;
+                pushLayer();
+                return;
+            }
+            if (!$("#drawer").hidden) return hideDrawer();
+            if (!$("#dayView").hidden) return hideDay();
+        });
         function focusEnd(el) {
             el.focus();
             const r = document.createRange();
@@ -1516,6 +1543,7 @@ svg .f { fill: currentColor; stroke: none; }
             renderUsers();
             updateSyncInfo();
             $("#ver").textContent = VERSION;
+            if ($("#drawer").hidden) pushLayer();
             $("#drawer").hidden = false;
             $("#drawerBg").hidden = false;
             $("#connInfo").textContent = connText();
@@ -1582,10 +1610,13 @@ svg .f { fill: currentColor; stroke: none; }
                 toast(`삭제 실패: ${err.message || err}`);
             }
         });
-        function closeDrawer() {
+        function hideDrawer() {
             $("#drawer").hidden = true;
             $("#drawerBg").hidden = true;
         }
+        const closeDrawer = () => {
+            if (!$("#drawer").hidden) goBack(hideDrawer);
+        };
         function selectUser(id) {
             if (dayKey) saveDay(true);
             userId = id;
