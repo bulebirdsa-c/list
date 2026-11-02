@@ -23,7 +23,7 @@ svg .f { fill: currentColor; stroke: none; }
 .hiddenInput { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; left: 20px; top: 40px; }
 .small { font-size: 13px; } .muted { color: #8a94a6; line-height: 1.6; }
 
-
+/* ---------- 월 달력 ---------- */
 #monthView { position: fixed; inset: 0; display: flex; flex-direction: column; }
 .top { flex: none; display: flex; align-items: center; gap: 6px; padding: calc(env(safe-area-inset-top) + 14px) 14px 14px 20px;
   background: linear-gradient(180deg, #cdeafc 0%, #e6f5fe 100%); }
@@ -80,7 +80,7 @@ svg .f { fill: currentColor; stroke: none; }
   background: linear-gradient(160deg, #3cc0ff, #1f9fe8); color: #fff; font-size: 30px; line-height: 38px; font-weight: 300;
   box-shadow: 0 6px 16px rgba(31,159,232,.45); }
 
-
+/* ---------- 하루 일정 ---------- */
 #dayView { position: fixed; inset: 0; display: flex; flex-direction: column; background: #f7f7f8; z-index: 5; }
 .dtop { flex: none; display: flex; align-items: center; padding: calc(env(safe-area-inset-top) + 10px) 8px 10px; background: #fff; }
 .dtitle { flex: 1; text-align: center; }
@@ -109,7 +109,7 @@ svg .f { fill: currentColor; stroke: none; }
 .sw { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); }
 .sw.none { background: linear-gradient(135deg, #fff 45%, #e5484d 45%, #e5484d 55%, #fff 55%); }
 
-
+/* ---------- 메뉴 ---------- */
 #drawerBg { position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 9; }
 #drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(320px, 86vw); background: #fff; z-index: 10; padding: calc(env(safe-area-inset-top) + 18px) 18px 18px; overflow-y: auto; }
 .dhead { font-size: 20px; font-weight: 600; margin-bottom: 10px; }
@@ -129,6 +129,10 @@ svg .f { fill: currentColor; stroke: none; }
 #setup { position: fixed; inset: 0; background: rgba(20,40,60,.45); z-index: 22; display: grid; place-items: center; padding: 20px; }
 #setup .dsec { margin: 12px 0 6px; }
 #setup .primary { background: linear-gradient(160deg, #3cc0ff, #1f9fe8); color: #fff; font-weight: 600; }
+#setup .google { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 13px; margin-top: 14px;
+  background: #fff; border: 1px solid #cfd6de; color: #1d2433; font-size: 17px; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+#setup .google b { color: #4285f4; font-size: 20px; }
+#setup .google:disabled { opacity: .5; }
 .err { color: #c62828; line-height: 1.5; }
 
 #toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 100px); transform: translateX(-50%); background: rgba(30,40,55,.92); color: #fff;
@@ -201,9 +205,9 @@ svg .f { fill: currentColor; stroke: none; }
   <div class="dsec">동기화</div>
   <div id="syncInfo" class="small"></div>
   <button id="syncBtn" class="wide">지금 동기화</button>
-  <div class="dsec">서버 연결</div>
+  <div class="dsec">구글 계정</div>
   <div id="connInfo" class="small"></div>
-  <button id="connBtn" class="wide">서버 주소 · 접속 키 바꾸기</button>
+  <button id="connBtn" class="wide">로그아웃</button>
   <button id="installBtn" class="wide" hidden>휴대폰에 앱으로 설치</button>
   <p class="small muted">PC의 바탕화면 달력과 같은 사용자를 고르면 같은 일정이 보입니다.<br>홈 화면에 추가: 브라우저 메뉴(⋮ 또는 공유) → “홈 화면에 추가”.<br>버전 <span id="ver"></span></p>
 </aside>
@@ -226,19 +230,14 @@ svg .f { fill: currentColor; stroke: none; }
     <p class="small muted">나중에 오른쪽 위 메뉴에서 바꿀 수 있습니다.</p>
   </div>
 </div>
-<!-- 서버 연결: 각자 자기 서버 주소와 접속 키 (이 휴대폰에만 저장) -->
+<!-- 구글 로그인 -->
 <div id="setup" hidden>
   <div class="pbox">
-    <div class="ptitle">내 서버에 연결</div>
-    <p class="small muted">일정은 각자의 구글 드라이브에 저장됩니다. 안내문대로 만든 내 서버의 정보를 넣으세요. 이 휴대폰에만 저장됩니다.</p>
-    <div id="setupUrlRow">
-      <div class="dsec">서버 주소 (…/exec)</div>
-      <div class="drow"><input id="setupUrl" type="url" placeholder="script.google.com/macros/s/…/exec 전체 주소" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
-    </div>
-    <div class="dsec">접속 키 (서버 setup 실행 로그에 나온 키)</div>
-    <div class="drow"><input id="setupKey" placeholder="접속 키" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    <div class="ptitle">구글 계정으로 시작</div>
+    <p class="small muted">PC의 바탕화면 달력과 <b>같은 구글 계정</b>으로 로그인하세요. 일정은 내 구글 드라이브(이 앱만 쓰는 숨은 폴더)에 저장되어 PC와 함께 보입니다.</p>
+    <button id="loginBtn" class="wide google"><b>G</b> 구글로 로그인</button>
     <p id="setupMsg" class="small muted"></p>
-    <div class="drow" style="margin-top:6px"><button id="setupCancel" class="wide" style="margin:0">취소</button><button id="setupOk" class="wide primary" style="margin:0">연결</button></div>
+    <button id="setupCancel" class="wide" hidden>로그인 없이 저장된 일정만 보기</button>
   </div>
 </div>
 <div id="toast"></div>
@@ -872,6 +871,444 @@ svg .f { fill: currentColor; stroke: none; }
         };
     }();
     if (typeof module !== "undefined") module.exports = DAY_MERGE;
+    var DRIVE_SYNC = function() {
+        var API = "https://www.googleapis.com/drive/v3/files";
+        var UPLOAD = "https://www.googleapis.com/upload/drive/v3/files";
+        var BIG_KEYS = [ "bgImageData" ];
+        var DEFAULT_USERS = [ {
+            id: "u1",
+            name: "사용자1"
+        } ];
+        var ID_RE = /^[A-Za-z0-9_-]{1,40}$/;
+        function create(opt) {
+            var merge = opt.merge;
+            var fetchFn = opt.fetch || fetch;
+            var files = {};
+            var cache = {};
+            var queue = Promise.resolve();
+            function serial(fn) {
+                var p = queue.then(fn, fn);
+                queue = p.catch(function() {});
+                return p;
+            }
+            async function req(method, url, body, type) {
+                for (var attempt = 0; attempt < 2; attempt++) {
+                    var token = await opt.getToken(attempt > 0);
+                    var headers = {
+                        Authorization: "Bearer " + token
+                    };
+                    if (type) headers["Content-Type"] = type;
+                    var res = await fetchFn(url, {
+                        method: method,
+                        headers: headers,
+                        body: body
+                    });
+                    if (res.status === 401 && attempt === 0) continue;
+                    if (!res.ok) {
+                        var detail = "";
+                        try {
+                            detail = await res.text();
+                        } catch (e) {}
+                        var err = new Error(res.status === 401 || res.status === 403 ? "구글 드라이브 권한이 없습니다. 다시 로그인해 주세요." : "구글 드라이브 오류 (" + res.status + ")");
+                        err.status = res.status;
+                        err.code = res.status === 401 ? "auth" : "";
+                        err.detail = detail;
+                        throw err;
+                    }
+                    if (res.status === 204) return null;
+                    return method === "GET" && /alt=media/.test(url) ? res.text() : res.json();
+                }
+            }
+            async function refresh() {
+                var out = {}, pageToken = "";
+                do {
+                    var r = await req("GET", API + "?spaces=appDataFolder&pageSize=1000&orderBy=createdTime" + "&fields=" + encodeURIComponent("nextPageToken,files(id,name,version)") + (pageToken ? "&pageToken=" + encodeURIComponent(pageToken) : ""));
+                    (r.files || []).forEach(function(f) {
+                        (out[f.name] = out[f.name] || []).push({
+                            id: f.id,
+                            version: f.version
+                        });
+                    });
+                    pageToken = r.nextPageToken || "";
+                } while (pageToken);
+                files = out;
+            }
+            async function download(f) {
+                var c = cache[f.id];
+                if (!c || c.version !== f.version) {
+                    var text = await req("GET", API + "/" + f.id + "?alt=media");
+                    c = cache[f.id] = {
+                        version: f.version,
+                        text: text
+                    };
+                }
+                try {
+                    return JSON.parse(c.text);
+                } catch (e) {
+                    return null;
+                }
+            }
+            async function load(name, fallback, combine) {
+                var list = files[name] || [];
+                var data = null;
+                for (var i = 0; i < list.length; i++) {
+                    var d = await download(list[i]);
+                    if (d == null) continue;
+                    data = data == null ? d : combine(data, d);
+                }
+                if (list.length > 1 && data != null) {
+                    var extra = list.slice(1);
+                    files[name] = [ list[0] ];
+                    await save(name, data);
+                    for (var j = 0; j < extra.length; j++) {
+                        try {
+                            await req("DELETE", API + "/" + extra[j].id);
+                        } catch (e) {}
+                    }
+                }
+                return data == null ? fallback : data;
+            }
+            async function save(name, data) {
+                var text = JSON.stringify(data);
+                var f = (files[name] || [])[0], r;
+                if (f) {
+                    r = await req("PATCH", UPLOAD + "/" + f.id + "?uploadType=media&fields=id,version", text, "application/json");
+                } else {
+                    var boundary = "deskcal" + Math.random().toString(36).slice(2);
+                    var body = "--" + boundary + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" + JSON.stringify({
+                        name: name,
+                        parents: [ "appDataFolder" ],
+                        mimeType: "application/json"
+                    }) + "\r\n--" + boundary + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" + text + "\r\n--" + boundary + "--";
+                    r = await req("POST", UPLOAD + "?uploadType=multipart&fields=id,version", body, "multipart/related; boundary=" + boundary);
+                }
+                files[name] = [ {
+                    id: r.id,
+                    version: r.version
+                } ];
+                cache[r.id] = {
+                    version: r.version,
+                    text: text
+                };
+            }
+            function unionById(a, b) {
+                var out = (a || []).slice();
+                (b || []).forEach(function(u) {
+                    if (u && !out.some(function(x) {
+                        return x.id === u.id;
+                    })) out.push(u);
+                });
+                return out;
+            }
+            function mergeDays(target, days) {
+                var changed = false;
+                Object.keys(days || {}).forEach(function(k) {
+                    var v = days[k];
+                    if (!/^\d{4}-\d{2}-\d{2}$/.test(k) || !v || !Array.isArray(v.items)) return;
+                    var merged = merge.mergeDay(k, target[k], v);
+                    if (JSON.stringify(merged) !== JSON.stringify(target[k])) {
+                        target[k] = merged;
+                        changed = true;
+                    }
+                });
+                return changed;
+            }
+            function combineData(a, b) {
+                var out = {
+                    version: 1,
+                    days: Object.assign({}, a.days || {})
+                };
+                mergeDays(out.days, b.days || {});
+                return out;
+            }
+            function mergeValues(cur, values) {
+                var changed = false;
+                Object.keys(values || {}).forEach(function(k) {
+                    var v = values[k];
+                    if (!/^\w{1,40}$/.test(k) || !v || typeof v !== "object") return;
+                    if (!cur[k] || (v.t || 0) > (cur[k].t || 0)) {
+                        cur[k] = {
+                            v: v.v,
+                            t: v.t || 0
+                        };
+                        changed = true;
+                    }
+                });
+                return changed;
+            }
+            function combineValues(a, b) {
+                var out = Object.assign({}, a);
+                mergeValues(out, b);
+                return out;
+            }
+            function checkId(user) {
+                if (!ID_RE.test(String(user || ""))) throw new Error("사용자 ID가 올바르지 않습니다");
+            }
+            async function users() {
+                var list = await load("users.json", null, unionById);
+                if (list && list.length) return list;
+                await save("users.json", DEFAULT_USERS);
+                return DEFAULT_USERS.slice();
+            }
+            var loadDeleted = function() {
+                return load("deleted-users.json", [], unionById);
+            };
+            async function addUser(name) {
+                var list = await users(), deleted = await loadDeleted();
+                var n = list.length + 1;
+                while (list.some(function(u) {
+                    return u.id === "u" + n;
+                }) || deleted.some(function(u) {
+                    return u.id === "u" + n;
+                })) n++;
+                list.push({
+                    id: "u" + n,
+                    name: String(name || "사용자" + n).slice(0, 30)
+                });
+                await save("users.json", list);
+                return list;
+            }
+            async function renameUser(id, name) {
+                var list = await users();
+                var u = list.find(function(x) {
+                    return x.id === id;
+                });
+                if (!u) throw new Error("사용자를 찾을 수 없습니다");
+                u.name = String(name || u.name).trim().slice(0, 30) || u.name;
+                await save("users.json", list);
+                return list;
+            }
+            async function deleteUser(id) {
+                var list = await users();
+                var u = list.find(function(x) {
+                    return x.id === id;
+                });
+                if (!u) throw new Error("사용자를 찾을 수 없습니다");
+                if (list.length <= 1) throw new Error("마지막 사용자는 삭제할 수 없습니다");
+                var deleted = (await loadDeleted()).filter(function(x) {
+                    return x.id !== id;
+                });
+                deleted.push({
+                    id: u.id,
+                    name: u.name,
+                    deletedAt: Date.now()
+                });
+                await save("deleted-users.json", deleted);
+                var rest = list.filter(function(x) {
+                    return x.id !== id;
+                });
+                await save("users.json", rest);
+                return rest;
+            }
+            async function deletedUsers() {
+                var deleted = await loadDeleted(), out = [];
+                for (var i = 0; i < deleted.length; i++) {
+                    var u = deleted[i];
+                    var data = await load("data-" + u.id + ".json", {
+                        days: {}
+                    }, combineData);
+                    var count = 0, last = 0;
+                    Object.keys(data.days || {}).forEach(function(k) {
+                        var d = data.days[k];
+                        if (d.items && d.items.length) count++;
+                        if ((d.t || 0) > last) last = d.t || 0;
+                    });
+                    out.push({
+                        id: u.id,
+                        name: u.name,
+                        deletedAt: u.deletedAt,
+                        days: count,
+                        lastModified: last
+                    });
+                }
+                return out;
+            }
+            async function restoreUser(id) {
+                var deleted = await loadDeleted();
+                var u = deleted.find(function(x) {
+                    return x.id === id;
+                });
+                if (!u) throw new Error("보관된 사용자를 찾을 수 없습니다");
+                var list = await users();
+                if (!list.some(function(x) {
+                    return x.id === id;
+                })) list.push({
+                    id: u.id,
+                    name: u.name
+                });
+                await save("users.json", list);
+                await save("deleted-users.json", deleted.filter(function(x) {
+                    return x.id !== id;
+                }));
+                return list;
+            }
+            async function sync(user, days) {
+                checkId(user);
+                var name = "data-" + user + ".json";
+                var data = await load(name, {
+                    version: 1,
+                    days: {}
+                }, combineData);
+                data.days = data.days || {};
+                if (mergeDays(data.days, days)) await save(name, data);
+                return data.days;
+            }
+            async function syncSettings(user, values, have, skipBig) {
+                checkId(user);
+                values = values || {};
+                var smallName = "settings-" + user + ".json", bigName = "settings-" + user + "-big.json";
+                var small = await load(smallName, {}, combineValues);
+                var sendBig = Object.keys(values).some(function(k) {
+                    return BIG_KEYS.indexOf(k) >= 0;
+                });
+                var big = skipBig && !sendBig ? {} : await load(bigName, {}, combineValues);
+                var sv = {}, bv = {};
+                Object.keys(values).forEach(function(k) {
+                    (BIG_KEYS.indexOf(k) >= 0 ? bv : sv)[k] = values[k];
+                });
+                if (mergeValues(small, sv)) await save(smallName, small);
+                if (mergeValues(big, bv)) await save(bigName, big);
+                var out = {};
+                [ small, skipBig ? {} : big ].forEach(function(cur) {
+                    Object.keys(cur).forEach(function(k) {
+                        if (!have || have[k] !== cur[k].t) out[k] = cur[k];
+                    });
+                });
+                return out;
+            }
+            async function importLegacy(snap) {
+                var cur = await load("users.json", null, unionById);
+                var list = cur && cur.length ? unionById(cur, snap.users) : (snap.users || []).slice();
+                if (!list.length) list = DEFAULT_USERS.slice();
+                (snap.users || []).forEach(function(u) {
+                    var x = list.find(function(y) {
+                        return y.id === u.id;
+                    });
+                    if (x && /^사용자\d+$/.test(x.name)) x.name = u.name;
+                });
+                var deleted = unionById(await loadDeleted(), snap.deleted).filter(function(d) {
+                    return !list.some(function(u) {
+                        return u.id === d.id;
+                    });
+                });
+                await save("users.json", list);
+                await save("deleted-users.json", deleted);
+                var count = {
+                    users: list.length,
+                    days: 0,
+                    items: 0,
+                    done: 0
+                };
+                var ids = Object.keys(snap.data || {});
+                for (var i = 0; i < ids.length; i++) {
+                    var days = snap.data[ids[i]] || {};
+                    await sync(ids[i], days);
+                    Object.keys(days).forEach(function(k) {
+                        var items = days[k] && days[k].items || [];
+                        if (items.length) count.days++;
+                        count.items += items.length;
+                        count.done += items.filter(function(it) {
+                            return it.d;
+                        }).length;
+                    });
+                }
+                var sids = Object.keys(snap.settings || {});
+                for (var j = 0; j < sids.length; j++) await syncSettings(sids[j], snap.settings[sids[j]], null, true);
+                return count;
+            }
+            function call(action, p) {
+                p = p || {};
+                return serial(async function() {
+                    await refresh();
+                    if (action === "users") return {
+                        ok: true,
+                        users: await users()
+                    };
+                    if (action === "addUser") return {
+                        ok: true,
+                        users: await addUser(p.name)
+                    };
+                    if (action === "renameUser") return {
+                        ok: true,
+                        users: await renameUser(p.id, p.name)
+                    };
+                    if (action === "deleteUser") return {
+                        ok: true,
+                        users: await deleteUser(p.id)
+                    };
+                    if (action === "deletedUsers") return {
+                        ok: true,
+                        deleted: await deletedUsers()
+                    };
+                    if (action === "restoreUser") return {
+                        ok: true,
+                        users: await restoreUser(p.id)
+                    };
+                    if (action === "sync") return {
+                        ok: true,
+                        days: await sync(p.user, p.days || {})
+                    };
+                    if (action === "syncSettings") return {
+                        ok: true,
+                        values: await syncSettings(p.user, p.values, p.have, p.skipBig)
+                    };
+                    if (action === "importLegacy") return {
+                        ok: true,
+                        count: await importLegacy(p.snapshot)
+                    };
+                    throw new Error("unknown action");
+                });
+            }
+            function reset() {
+                files = {};
+                cache = {};
+            }
+            return {
+                call: call,
+                reset: reset
+            };
+        }
+        async function fetchLegacy(legacyCall) {
+            var list = (await legacyCall("users", {})).users || [];
+            var deleted = [];
+            try {
+                deleted = (await legacyCall("deletedUsers", {})).deleted || [];
+            } catch (e) {}
+            var snap = {
+                users: list,
+                deleted: deleted.map(function(u) {
+                    return {
+                        id: u.id,
+                        name: u.name,
+                        deletedAt: u.deletedAt
+                    };
+                }),
+                data: {},
+                settings: {}
+            };
+            var all = list.concat(snap.deleted);
+            for (var i = 0; i < all.length; i++) {
+                var id = all[i].id;
+                snap.data[id] = (await legacyCall("sync", {
+                    user: id,
+                    days: {}
+                })).days || {};
+                try {
+                    snap.settings[id] = (await legacyCall("syncSettings", {
+                        user: id,
+                        values: {}
+                    })).values || {};
+                } catch (e) {}
+            }
+            return snap;
+        }
+        return {
+            create: create,
+            fetchLegacy: fetchLegacy,
+            BIG_KEYS: BIG_KEYS
+        };
+    }();
+    if (typeof module !== "undefined") module.exports = DRIVE_SYNC;
     window.addEventListener("error", e => {
         const box = document.getElementById("errBox");
         if (!box) return;
@@ -880,7 +1317,7 @@ svg .f { fill: currentColor; stroke: none; }
     });
     (function() {
         const $ = s => document.querySelector(s);
-        const VERSION = "1.5.1";
+        const VERSION = "2.0.1";
         const LS = {
             get(k, d) {
                 try {
@@ -896,44 +1333,30 @@ svg .f { fill: currentColor; stroke: none; }
                 } catch (e) {}
             }
         };
-        const hasGas = typeof google !== "undefined" && google.script && google.script.run;
-        const isPreview = !hasGas && location.protocol === "file:";
-        const isWebApp = !hasGas && !isPreview;
-        let conn = LS.get("dc_conn", {
-            url: "",
-            key: ""
+        const isPreview = location.protocol === "file:";
+        const isWebApp = !isPreview;
+        const CLIENT_ID = "547773099529-qkc5194j6es27jkcg852op6f42mdikdm.apps.googleusercontent.com";
+        const SCOPE = "openid email https://www.googleapis.com/auth/drive.appdata";
+        const REDIRECT = location.origin + location.pathname;
+        const configured = /\.apps\.googleusercontent\.com$/.test(CLIENT_ID);
+        let token = LS.get("dc_token", null);
+        let account = LS.get("dc_account", "");
+        const authError = msg => Object.assign(new Error(msg || "구글 로그인이 필요합니다"), {
+            code: "auth"
         });
-        const URL_RE = /^https:\/\/script\.google\.com\/.+\/exec$/;
+        const tokenOk = () => !!(token && token.exp > Date.now() + 6e4);
+        const drive = DRIVE_SYNC.create({
+            merge: DAY_MERGE,
+            getToken: async () => {
+                if (tokenOk()) return token.t;
+                token = null;
+                LS.set("dc_token", null);
+                throw authError("로그인 시간이 지났습니다");
+            }
+        });
         const server = {
-            async call(action, params, c = conn) {
-                const body = {
-                    ...params || {},
-                    action: action,
-                    key: c.key || ""
-                };
-                let r;
-                if (hasGas) {
-                    r = await new Promise((res, rej) => google.script.run.withSuccessHandler(res).withFailureHandler(rej).apiCall(action, body));
-                } else if (isPreview) {
-                    r = await mockCall(action, body);
-                } else {
-                    if (!c.url) throw Object.assign(new Error("서버 주소가 없습니다"), {
-                        code: "setup"
-                    });
-                    const res = await fetch(c.url, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "text/plain;charset=utf-8"
-                        },
-                        body: JSON.stringify(body)
-                    });
-                    const text = await res.text();
-                    try {
-                        r = JSON.parse(text);
-                    } catch (e) {
-                        throw new Error('서버 주소가 웹앱(…/exec) 주소가 아니거나, 액세스가 "모든 사용자"로 배포되지 않았습니다');
-                    }
-                }
+            async call(action, params) {
+                const r = isPreview ? await mockCall(action, params || {}) : await drive.call(action, params || {});
                 if (!r || !r.ok) throw Object.assign(new Error(r && r.error || "서버 오류"), {
                     code: r && r.code
                 });
@@ -1096,7 +1519,8 @@ svg .f { fill: currentColor; stroke: none; }
                     try {
                         const sv = (await server.call("syncSettings", {
                             user: uid,
-                            values: {}
+                            values: {},
+                            skipBig: true
                         })).values;
                         if (uid === userId) {
                             const before = LS.get("dc_custom_" + uid, "");
@@ -1112,7 +1536,7 @@ svg .f { fill: currentColor; stroke: none; }
                     if (showToast) toast("동기화 완료");
                 } catch (e) {
                     setCloud("error");
-                    if (needsSetup(e)) showSetup(e.message); else if (showToast) toast("동기화 실패 — 인터넷 연결을 확인하세요");
+                    if (e.code === "auth") renewLogin(e.message); else if (showToast) toast("동기화 실패 — 인터넷 연결을 확인하세요");
                 } finally {
                     syncing = null;
                     updateSyncInfo();
@@ -1546,7 +1970,8 @@ svg .f { fill: currentColor; stroke: none; }
             if ($("#drawer").hidden) pushLayer();
             $("#drawer").hidden = false;
             $("#drawerBg").hidden = false;
-            $("#connInfo").textContent = connText();
+            $("#connInfo").textContent = isPreview ? "미리보기 (가짜 서버)" : account ? `✔ ${account}` : "로그인 안 됨";
+            $("#connBtn").textContent = account ? "로그아웃" : "구글로 로그인";
             server.call("users").then(r => {
                 users = r.users;
                 LS.set("dc_users", users);
@@ -1670,64 +2095,142 @@ svg .f { fill: currentColor; stroke: none; }
             }
         });
         $("#syncBtn").addEventListener("click", () => sync(true));
-        const needsSetup = e => e && (e.code === "key" || e.code === "setup");
-        function connText() {
-            const key = conn.key ? "접속 키 입력됨" : "접속 키 없음";
-            if (hasGas) return `이 서버에 연결됨 · ${key}`;
-            if (isPreview) return "미리보기 (가짜 서버)";
-            if (!conn.url) return "연결 안 됨";
-            const id = conn.url.split("/s/")[1] || "";
-            return `서버 …${id.slice(-14, -5)} · ${key}`;
+        function login(silent) {
+            const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
+            LS.set("dc_oauth_state", state);
+            LS.set("dc_oauth_silent", silent ? Date.now() : 0);
+            const q = new URLSearchParams({
+                client_id: CLIENT_ID,
+                redirect_uri: REDIRECT,
+                response_type: "token",
+                scope: SCOPE,
+                include_granted_scopes: "true",
+                state: state,
+                prompt: silent ? "none" : "select_account"
+            });
+            if (account) q.set("login_hint", account);
+            location.href = `https:${"/".repeat(2)}accounts.google.com/o/oauth2/v2/auth?${q}`;
+        }
+        function readLoginReturn() {
+            const h = new URLSearchParams(location.hash.slice(1));
+            if (!h.get("access_token") && !h.get("error")) return null;
+            history.replaceState(null, "", REDIRECT);
+            const silent = LS.get("dc_oauth_silent", 0);
+            LS.set("dc_oauth_silent", 0);
+            if (h.get("state") !== LS.get("dc_oauth_state", "")) return {
+                error: "로그인 확인 값이 맞지 않습니다. 다시 시도하세요."
+            };
+            LS.set("dc_oauth_state", "");
+            if (h.get("error")) return {
+                error: silent ? "" : h.get("error") === "access_denied" ? "로그인을 취소했습니다." : `로그인 실패 (${h.get("error")})`
+            };
+            token = {
+                t: h.get("access_token"),
+                exp: Date.now() + Number(h.get("expires_in") || 3600) * 1e3
+            };
+            LS.set("dc_token", token);
+            return {
+                ok: true
+            };
+        }
+        function clearLocal(keep) {
+            Object.keys(localStorage).filter(k => k.startsWith("dc_") && !(keep || []).includes(k)).forEach(k => localStorage.removeItem(k));
+            users = [];
+            userId = "";
+            loadData();
+            renderPages();
+            renderUsers();
+        }
+        async function afterLogin() {
+            const res = await fetch(`https:${"/".repeat(2)}www.googleapis.com/oauth2/v3/userinfo`, {
+                headers: {
+                    Authorization: "Bearer " + token.t
+                }
+            });
+            const email = res.ok ? (await res.json()).email || "" : "";
+            if (account && email && account !== email) {
+                clearLocal([ "dc_token" ]);
+                drive.reset();
+            }
+            account = email;
+            LS.set("dc_account", account);
+            await importOldServer();
+        }
+        async function importOldServer() {
+            const old = LS.get("dc_conn", null);
+            if (!old || !old.url || LS.get("dc_legacy_" + account, 0)) return;
+            toast("예전 서버의 일정을 구글 드라이브로 옮기는 중…", 8e3);
+            try {
+                const legacyCall = async (action, p) => {
+                    const res = await fetch(old.url, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "text/plain;charset=utf-8"
+                        },
+                        body: JSON.stringify({
+                            ...p,
+                            action: action,
+                            key: old.key || ""
+                        })
+                    });
+                    const r = JSON.parse(await res.text());
+                    if (!r.ok) throw new Error(r.error || "예전 서버 오류");
+                    return r;
+                };
+                const snapshot = await DRIVE_SYNC.fetchLegacy(legacyCall);
+                const {count: count} = await server.call("importLegacy", {
+                    snapshot: snapshot
+                });
+                LS.set("dc_legacy_" + account, Date.now());
+                toast(`예전 일정 ${count.items}줄을 옮겼습니다`);
+            } catch (e) {
+                toast("예전 서버 일정 옮기기 실패 — PC 설정 창에서 옮겨 주세요", 4e3);
+            }
+        }
+        function renewLogin(msg) {
+            if (isPreview) return;
+            const busy = dayKey || !$("#drawer").hidden || !$("#confirmBg").hidden;
+            const recent = Date.now() - LS.get("dc_silent_at", 0) < 12e4;
+            if (account && configured && navigator.onLine && !busy && !recent) {
+                LS.set("dc_silent_at", Date.now());
+                login(true);
+            } else if (!account) {
+                showSetup(msg);
+            }
         }
         function showSetup(msg) {
-            $("#setupUrlRow").hidden = !isWebApp;
-            $("#setupUrl").value = conn.url || "";
-            $("#setupKey").value = conn.key || "";
-            $("#setupMsg").textContent = msg || "";
-            $("#setupMsg").className = "small" + (msg ? " err" : " muted");
-            $("#setupCancel").hidden = !(isWebApp ? conn.url : true);
+            $("#setupMsg").textContent = !configured ? "이 앱에는 아직 구글 로그인 정보가 없습니다. 만든 사람에게 알려 주세요." : msg || "";
+            $("#setupMsg").className = "small" + (msg || !configured ? " err" : " muted");
+            $("#loginBtn").disabled = !configured;
+            $("#setupCancel").hidden = !users.length;
             $("#picker").hidden = true;
             $("#setup").hidden = false;
         }
+        $("#loginBtn").addEventListener("click", () => {
+            $("#setupMsg").className = "small muted";
+            $("#setupMsg").textContent = "구글 로그인 화면으로 이동합니다…";
+            login(false);
+        });
         $("#setupCancel").addEventListener("click", () => {
             $("#setup").hidden = true;
         });
-        $("#connBtn").addEventListener("click", () => {
+        $("#connBtn").addEventListener("click", async () => {
+            if (!account) {
+                closeDrawer();
+                return showSetup();
+            }
+            const ok = await confirmBox("구글 계정에서 로그아웃할까요?", "이 휴대폰에 저장된 일정 사본을 지웁니다. 일정은 구글 드라이브에 그대로 있고, 다시 로그인하면 돌아옵니다.");
+            if (!ok) return;
+            const t = token && token.t;
+            if (t) fetch(`https:${"/".repeat(2)}oauth2.googleapis.com/revoke?token=${encodeURIComponent(t)}`, {
+                method: "POST"
+            }).catch(() => {});
+            token = null;
+            account = "";
+            clearLocal([]);
+            drive.reset();
             closeDrawer();
             showSetup();
-        });
-        $("#setupOk").addEventListener("click", async () => {
-            const next = {
-                url: isWebApp ? $("#setupUrl").value.trim() : "",
-                key: $("#setupKey").value.trim()
-            };
-            const msg = $("#setupMsg");
-            if (isWebApp && !URL_RE.test(next.url)) {
-                msg.className = "small err";
-                msg.textContent = `주소는 https:${"/".repeat(2)}script.google.com/macros/s/…/exec 형식이어야 합니다.`;
-                return;
-            }
-            msg.className = "small muted";
-            msg.textContent = "연결하는 중…";
-            try {
-                const r = await server.call("users", {}, next);
-                if (isWebApp && conn.url && conn.url !== next.url) {
-                    Object.keys(localStorage).filter(k => k.startsWith("dc_")).forEach(k => localStorage.removeItem(k));
-                    userId = "";
-                    loadData();
-                    renderPages();
-                }
-                conn = next;
-                LS.set("dc_conn", conn);
-                users = r.users;
-                LS.set("dc_users", users);
-                $("#setup").hidden = true;
-                toast("서버에 연결했습니다");
-                afterUsers();
-            } catch (e) {
-                msg.className = "small err";
-                msg.textContent = `연결 실패: ${e.message || e}`;
-            }
         });
         let installEvt = null;
         window.addEventListener("beforeinstallprompt", e => {
@@ -1757,26 +2260,41 @@ svg .f { fill: currentColor; stroke: none; }
             renderUsers();
             if (userId) sync();
         }
-        loadData();
-        renderPages();
-        setTimeout(scrollToToday, 50);
-        renderUsers();
-        if (isWebApp && !conn.url) {
-            showSetup();
-        } else {
-            server.call("users").then(r => {
+        function loadUsers() {
+            return server.call("users").then(r => {
                 users = r.users;
                 LS.set("dc_users", users);
                 afterUsers();
             }).catch(e => {
                 setCloud("error");
-                if (needsSetup(e)) showSetup(e.message); else if (!userId) {
+                if (e.code === "auth") renewLogin(e.message); else if (!userId) {
                     $("#picker").hidden = false;
-                    $("#pickList").innerHTML = '<p class="small muted">서버에 연결할 수 없습니다. 인터넷 연결을 확인하세요.</p>';
+                    $("#pickList").innerHTML = '<p class="small muted">구글 드라이브에 연결할 수 없습니다. 인터넷 연결을 확인하세요.</p>';
                 }
             });
-            if (!userId && users.length) $("#picker").hidden = false;
         }
+        loadData();
+        renderPages();
+        setTimeout(scrollToToday, 50);
+        renderUsers();
+        (async () => {
+            if (isPreview) return loadUsers();
+            const back = readLoginReturn();
+            if (back && back.ok) {
+                try {
+                    await afterLogin();
+                } catch (e) {}
+                return loadUsers();
+            }
+            if (back && back.error) return showSetup(back.error);
+            if (back) {
+                if (!tokenOk()) return showSetup("다시 로그인해 주세요.");
+            }
+            if (!account) return showSetup();
+            if (tokenOk()) return loadUsers();
+            if (!userId && users.length) $("#picker").hidden = false;
+            renewLogin();
+        })();
     })();
 })();</script>
 </body>
