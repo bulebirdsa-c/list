@@ -1,6 +1,6 @@
 // 휴대폰 앱 오프라인 실행용: 인터넷이 되면 항상 새 파일, 안 되면 마지막으로 받은 파일
 // 서버(script.google.com) 호출은 건드리지 않음 — 같은 주소(앱 파일)만 저장
-const CACHE = 'deskcal-2.0.1';
+const CACHE = 'deskcal-2.0.2';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {

@@ -50,6 +50,11 @@ svg .f { fill: currentColor; stroke: none; }
 @keyframes pulse { 50% { opacity: .3; } }
 .pill-sm { font-size: 13px; border: 1px solid #9ccbe8; color: #2b6f99; padding: 4px 10px; border-radius: 14px; background: rgba(255,255,255,.6); }
 
+#installBar { flex: none; display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 14px; background: #fff8e1; border-bottom: 1px solid #f3dfa2; color: #4a3b10; font-size: 14px; line-height: 1.45; }
+#installBar svg { width: 22px; height: 22px; flex: none; color: #b07d00; }
+#ibText { flex: 1; min-width: 0; }
+#ibAct { flex: none; padding: 8px 12px; border-radius: 9px; background: #1f9fe8; color: #fff; font-weight: 600; font-size: 14px; white-space: nowrap; }
+#ibClose { flex: none; width: 30px; height: 30px; color: #8a7a4a; font-size: 15px; }
 .dow { flex: none; display: grid; grid-template-columns: repeat(7, 1fr); background: #eaf6fd; border-bottom: 1px solid #cfe7f5; }
 .dow span { text-align: center; padding: 10px 0 11px; font-size: 16px; font-weight: 500; }
 .dow .sun, .dow .sat { color: #9aa3ad; }
@@ -158,6 +163,12 @@ svg .f { fill: currentColor; stroke: none; }
       <svg viewBox="0 0 24 24"><circle cx="4.5" cy="6" r="1.4" class="f"/><circle cx="4.5" cy="12" r="1.4" class="f"/><circle cx="4.5" cy="18" r="1.4" class="f"/><path d="M9 6h11M9 12h11M9 18h11"/></svg>
     </button>
   </header>
+  <div id="installBar" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 19h14"/></svg>
+    <div id="ibText"></div>
+    <button id="ibAct"></button>
+    <button id="ibClose" aria-label="설치 안내 닫기">✕</button>
+  </div>
   <div class="dow"><span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="sat">토</span></div>
   <div id="pager"><div id="track"><div class="page"></div><div class="page"></div><div class="page"></div></div></div>
   <button id="fab" aria-label="오늘 일정 추가">+</button>
@@ -208,7 +219,7 @@ svg .f { fill: currentColor; stroke: none; }
   <div class="dsec">구글 계정</div>
   <div id="connInfo" class="small"></div>
   <button id="connBtn" class="wide">로그아웃</button>
-  <button id="installBtn" class="wide" hidden>휴대폰에 앱으로 설치</button>
+  <button id="installBtn" class="wide" hidden>휴대폰 홈 화면에 설치하는 방법</button>
   <p class="small muted">PC의 바탕화면 달력과 같은 사용자를 고르면 같은 일정이 보입니다.<br>홈 화면에 추가: 브라우저 메뉴(⋮ 또는 공유) → “홈 화면에 추가”.<br>버전 <span id="ver"></span></p>
 </aside>
 
@@ -1317,7 +1328,7 @@ svg .f { fill: currentColor; stroke: none; }
     });
     (function() {
         const $ = s => document.querySelector(s);
-        const VERSION = "2.0.1";
+        const VERSION = "2.0.2";
         const LS = {
             get(k, d) {
                 try {
@@ -2232,19 +2243,91 @@ svg .f { fill: currentColor; stroke: none; }
             closeDrawer();
             showSetup();
         });
+        const ua = navigator.userAgent;
+        const isIOS = /iPhone|iPad|iPod/.test(ua) || navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+        const isAndroid = /Android/.test(ua);
+        const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+        const inApp = /KAKAOTALK|NAVER\(|NAVER |Instagram|FBAN|FBAV|Line\/|DaumApps|GSA\/|; wv\)/.test(ua);
+        const isSamsung = /SamsungBrowser/.test(ua);
         let installEvt = null;
+        function openInChrome() {
+            const fallback = encodeURIComponent(REDIRECT);
+            location.href = `intent:${"/".repeat(2)}${location.host}${location.pathname}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${fallback};end`;
+        }
+        async function copyLink() {
+            try {
+                await navigator.clipboard.writeText(REDIRECT);
+                toast("주소를 복사했습니다. 사파리 주소창에 붙여 넣으세요");
+            } catch (e) {
+                toast(REDIRECT, 6e3);
+            }
+        }
+        async function doInstall() {
+            if (!installEvt) return;
+            installEvt.prompt();
+            const {outcome: outcome} = await installEvt.userChoice;
+            installEvt = null;
+            if (outcome === "accepted") $("#installBar").hidden = true; else showInstallBar(true);
+        }
+        function installGuide() {
+            if (inApp && isAndroid) return {
+                text: "지금은 카메라·메신저 안의 화면이라 설치 메뉴가 없습니다. 크롬으로 열어서 설치하세요.",
+                btn: "크롬으로 열기",
+                act: openInChrome
+            };
+            if (inApp && isIOS) return {
+                text: '지금은 카메라·메신저 안의 화면이라 설치할 수 없습니다. 오른쪽 아래 ⋯(또는 공유) → "Safari로 열기"를 누른 뒤, 공유(□↑) → "홈 화면에 추가"를 고르세요.',
+                btn: "주소 복사",
+                act: copyLink
+            };
+            if (installEvt) return {
+                text: "홈 화면에 달력 앱을 설치하면 일반 앱처럼 바로 열립니다.",
+                btn: "설치",
+                act: doInstall
+            };
+            if (isIOS) return {
+                text: '아래쪽(또는 주소창 옆)의 공유 버튼(□↑)을 누르고 "홈 화면에 추가"를 고르세요.'
+            };
+            if (isSamsung) return {
+                text: '아래쪽 메뉴(≡) → "현재 페이지 추가" → "홈 화면"을 고르세요.'
+            };
+            if (isAndroid) return {
+                text: '오른쪽 위 ⋮ 메뉴 → "앱 설치"(또는 "홈 화면에 추가") → "설치"를 고르세요.'
+            };
+            return null;
+        }
+        function showInstallBar(force) {
+            const g = installGuide();
+            const hiddenUntil = LS.get("dc_install_hide", 0);
+            if (!isWebApp || standalone || !g || !force && hiddenUntil > Date.now()) {
+                $("#installBar").hidden = true;
+                return;
+            }
+            $("#ibText").textContent = g.text;
+            $("#ibAct").hidden = !g.btn;
+            $("#ibAct").textContent = g.btn || "";
+            $("#ibAct").onclick = g.act || null;
+            $("#installBar").hidden = false;
+        }
+        $("#ibClose").addEventListener("click", () => {
+            LS.set("dc_install_hide", Date.now() + 14 * 864e5);
+            $("#installBar").hidden = true;
+        });
         window.addEventListener("beforeinstallprompt", e => {
             e.preventDefault();
             installEvt = e;
-            $("#installBtn").hidden = false;
+            showInstallBar();
         });
-        $("#installBtn").addEventListener("click", async () => {
-            if (!installEvt) return;
-            installEvt.prompt();
-            await installEvt.userChoice;
-            installEvt = null;
+        window.addEventListener("appinstalled", () => {
+            $("#installBar").hidden = true;
             $("#installBtn").hidden = true;
         });
+        $("#installBtn").hidden = !isWebApp || standalone;
+        $("#installBtn").addEventListener("click", () => {
+            closeDrawer();
+            if (installEvt) doInstall(); else showInstallBar(true);
+        });
+        showInstallBar();
         if (isWebApp && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
         document.addEventListener("visibilitychange", () => {
             if (!document.hidden) sync();
