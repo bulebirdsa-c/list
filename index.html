@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>바탕화면달력</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Jua&display=swap">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#cdeafc">
 <meta name="mobile-web-app-capable" content="yes">
@@ -143,6 +144,193 @@ svg .f { fill: currentColor; stroke: none; }
 #toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 100px); transform: translateX(-50%); background: rgba(30,40,55,.92); color: #fff;
   font-size: 14px; padding: 9px 14px; border-radius: 10px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 30; max-width: 86vw; text-align: center; }
 #toast.show { opacity: 1; }
+
+/* ---------- 아래 메뉴 ---------- */
+:root { --tab: 60px; }
+#monthView, .tabPage { position: fixed; top: 0; left: 0; right: 0; bottom: calc(var(--tab) + env(safe-area-inset-bottom)); display: flex; flex-direction: column; }
+#tabbar { position: fixed; left: 0; right: 0; bottom: 0; height: calc(var(--tab) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); display: grid; grid-template-columns: repeat(5, 1fr);
+  background: #fff; border-top: 1px solid #d9e3ea; z-index: 4; }
+#tabbar button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #5f6b7a; position: relative; font-size: 12px; }
+#tabbar button.on { color: #1f9fe8; font-weight: 700; }
+#tabbar svg { width: 25px; height: 25px; }
+#cloudBtn .dot { position: absolute; left: 50%; top: 8px; margin-left: 9px; width: 8px; height: 8px; border-radius: 50%; background: transparent; }
+#fab { bottom: calc(env(safe-area-inset-bottom) + var(--tab) + 16px); }
+#toast { bottom: calc(env(safe-area-inset-bottom) + var(--tab) + 28px); }
+.colorBtn svg.four { width: 25px; height: 25px; stroke: none; }
+.memoT { padding-left: 12px; }
+.top .icon.colorBtn { margin-right: 2px; }
+
+/* ---------- 메모 목록 ---------- */
+#memoView { background: #e9eef2; }
+#sortRow { flex: none; display: flex; gap: 6px; padding: 7px 6px 6px; }
+#colorChip { flex: none; padding: 0 12px; background: #fff; border: 1px solid #dfe5ea; font-size: 14px; color: #2a2f3a; display: flex; align-items: center; gap: 6px; }
+#colorChip i { width: 14px; height: 14px; border: 1px solid rgba(0,0,0,.15); }
+#folderTools { flex: none; display: flex; justify-content: flex-end; gap: 16px; padding: 0 10px 6px; font-size: 13px; color: #1478b8; }
+#memoList { flex: 1; min-height: 0; overflow-y: auto; padding: 0 6px 92px; align-content: start; }
+#memoList.grid, #memoList.large { display: grid; gap: 5px; }
+#memoList.grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#memoList.large { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#memoList.list, #memoList.detail, #memoList.folder { display: flex; flex-direction: column; gap: 5px; }
+.nc { display: block; width: 100%; text-align: left; background: var(--bg); border-top: 5px solid var(--bar); padding: 6px 8px; overflow: hidden; box-shadow: 0 1px 1.5px rgba(30,50,70,.16); color: #1d2433; }
+.nc b { display: flex; align-items: center; gap: 4px; font-size: 18px; font-weight: 800; }
+.nc b em { font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.nc b svg { width: 15px; height: 15px; flex: none; }
+.nc p { margin: 3px 0 0; font-size: 15.500px; line-height: 1.38; white-space: pre-line; overflow-wrap: anywhere; overflow: hidden; }
+.nc time { display: none; font-size: 13px; color: #6c7786; }
+.grid .nc { height: 164px; }
+.large .nc { height: 250px; }
+.detail .nc { position: relative; }
+.detail .nc p { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; white-space: normal; }
+.detail .nc time { display: block; margin-top: 4px; text-align: right; }
+.list .nc { display: flex; align-items: center; gap: 8px; border-top: 0; border-left: 7px solid var(--bar); padding: 13px 10px; }
+.list .nc b { flex: 1; min-width: 0; font-size: 17px; font-weight: 600; }
+.list .nc p { display: none; }
+.list .nc time { display: block; flex: none; }
+.nc .lockText { color: #6c7786; font-size: 14px; }
+.memoEmpty { grid-column: 1 / -1; text-align: center; color: #7d8590; padding: 70px 16px; line-height: 1.7; }
+
+/* 폴더 */
+.fd { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; height: 66px; margin-top: 12px; padding: 0 14px; background: var(--fb); border: 1px solid var(--fl); border-radius: 0 8px 8px 8px; font-size: 18px; color: #1d2433; text-align: left; }
+.fd::before { content: ""; position: absolute; left: -1px; top: -11px; width: 112px; height: 11px; background: var(--fb); border: 1px solid var(--fl); border-bottom: 0; border-radius: 8px 12px 0 0; }
+.fd svg { width: 26px; height: 26px; flex: none; }
+.fd .fn { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fd .cnt { flex: none; min-width: 42px; padding: 3px 12px; text-align: center; border-radius: 14px; background: var(--fl); font-size: 15px; }
+#addFolder { margin-top: 10px; height: 48px; border: 1.500px dashed #a8b4c0; border-radius: 8px; color: #5f6b7a; font-size: 16px; flex: none; }
+
+#noteFab { position: absolute; right: 18px; bottom: 16px; width: 56px; height: 56px; border-radius: 18px; background: linear-gradient(160deg, #3cc0ff, #1f9fe8); color: #fff; font-size: 34px; font-weight: 300; line-height: 52px; box-shadow: 0 6px 16px rgba(31,159,232,.45); }
+
+/* ---------- 컬러 · 정렬 · 보기 ---------- */
+#vsBg { position: fixed; inset: 0; z-index: 12; background: rgba(20,30,40,.42); display: grid; place-items: center; padding: 16px; }
+.vs { width: min(370px, 100%); background: #f1f3f5; border-radius: 28px; overflow: hidden; }
+.vsTabs { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid #cfd6dc; }
+.vsTabs button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 0 12px; font-size: 16px; color: #3b4452; }
+.vsTabs svg { width: 25px; height: 25px; stroke: none; }
+.vsTabs button.on { color: #1478b8; font-weight: 700; }
+.vsTabs button.on::after { content: ""; position: absolute; left: 18%; right: 18%; bottom: 0; height: 4px; background: #1f9fe8; border-radius: 3px 3px 0 0; }
+#vsBody { padding: 8px 0 12px; }
+.csGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; padding: 12px 22px 10px; }
+.cs { height: 52px; position: relative; border: 2px solid transparent; }
+.cs.all { background: linear-gradient(to top left, #eee calc(50% - 1px), #c2c8ce calc(50% - 1px), #c2c8ce calc(50% + 1px), #eee calc(50% + 1px)); border: 1px solid #c2c8ce; }
+.cs.on { outline: 3px solid #1f9fe8; outline-offset: 1px; }
+.vsRow { display: flex; align-items: center; gap: 18px; width: 100%; padding: 13px 26px; font-size: 19px; text-align: left; color: #1d2433; }
+.vsRow svg { width: 26px; height: 26px; flex: none; color: #4b5563; }
+.vsRow.on { color: #1478b8; font-weight: 700; }
+.vsRow.on svg { color: #1478b8; }
+.vsRow .tick { margin-left: auto; }
+
+/* ---------- 메모 한 장 ---------- */
+#noteView { position: fixed; inset: 0; z-index: 6; display: flex; flex-direction: column; background: var(--nbg, #fff); }
+.ntop { flex: none; display: flex; align-items: center; padding: calc(env(safe-area-inset-top) + 8px) 4px 8px; background: var(--nbar, #ccc); color: var(--nfg, #1d2433); }
+#noteTitle { flex: 1; min-width: 0; font-size: 21px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 4px; }
+.ntop .icon { color: inherit; }
+#noteMenu { position: absolute; right: 8px; top: calc(env(safe-area-inset-top) + 54px); z-index: 7; width: 170px; background: #fff; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.25); padding: 6px 0; }
+#noteMenu button { display: block; width: 100%; padding: 13px 20px; text-align: left; font-size: 17px; }
+#noteMenu .red { color: #c62828; }
+#findBar { flex: none; display: flex; align-items: center; gap: 2px; padding: 6px 6px 6px 10px; background: #fff; border-bottom: 1px solid #dfe5ea; }
+#findInput { flex: 1; min-width: 0; font: inherit; font-size: 16px; padding: 7px 9px; border: 1px solid #cfd6de; border-radius: 8px; }
+#findCount { font-size: 13px; color: #6c7786; padding: 0 6px; font-variant-numeric: tabular-nums; }
+#findBar button { width: 36px; height: 36px; display: grid; place-items: center; color: #3b4452; }
+#findBar svg { width: 22px; height: 22px; }
+#noteScroll { flex: 1; min-height: 0; overflow-y: auto; }
+.lined { font: inherit; font-size: 19px; line-height: 34px; color: #111; padding: 0 12px 40px; background-image: linear-gradient(to bottom, transparent 33px, var(--nline, #ddd) 33px, var(--nline, #ddd) 34px); background-size: 100% 34px; }
+#noteRead { min-height: 100%; white-space: pre-wrap; overflow-wrap: anywhere; }
+#noteRead a { color: #0b63c4; text-decoration: underline; }
+#noteRead mark { background: #ffe25c; color: #111; }
+#noteRead mark.cur { background: #ff9d3c; }
+
+/* ---------- 글자 꾸미기 ---------- */
+.fmtHead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+.fmtHead b { font-size: 17px; }
+.fmtHead button { padding: 5px 14px; border-radius: 14px; background: #eaf6fd; color: #1478b8; font-size: 15px; }
+.fmtHint { font-size: 12.500px; color: #7d8590; margin: 2px 0 4px; line-height: 1.45; }
+.chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 3px; }
+.chip { flex: none; min-width: 42px; height: 36px; padding: 0 12px; border: 1px solid #cfd6de; border-radius: 9px; background: #fff; font-size: 15px; }
+.chip:active { background: #e3f4fe; }
+.chip.on { background: #e3f4fe; border-color: #29a8f0; color: #1478b8; }
+#palette { max-height: 74%; overflow-y: auto; }
+#palette .sheetTitle { margin: 7px 0 5px; }
+#palette .swatches { gap: 8px; margin-bottom: 2px; }
+#palette .sw { width: 32px; height: 32px; }
+.chips.tools { margin-top: 10px; }
+.cbtn .aa { font-size: 22px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---------- 검색 ---------- */
+.searchTop { gap: 8px !important; padding-left: 14px !important; }
+.searchTop svg { flex: none; color: #2b6f99; }
+#searchInput { flex: 1; min-width: 0; font: inherit; font-size: 17px; padding: 9px 12px; border: 1px solid #9ccbe8; border-radius: 10px; background: #fff; }
+#searchResult { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 0 30px; }
+.srHead { padding: 12px 16px 6px; font-size: 13px; color: #7d8590; }
+.sr { display: block; width: 100%; text-align: left; padding: 11px 16px; border-bottom: 1px solid #eef1f4; }
+.sr small { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #7d8590; margin-bottom: 2px; }
+.sr small i { width: 10px; height: 10px; flex: none; }
+.sr div { font-size: 16.500px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sr mark { background: #fff176; color: inherit; }
+.srEmpty { text-align: center; color: #7d8590; padding: 70px 16px; line-height: 1.7; }
+
+/* ---------- 설정 ---------- */
+#settingsView { background: #eef2f5; }
+.setScroll { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 10px 24px; display: flex; flex-direction: column; gap: 10px; }
+.setCard { flex: none; background: #fff; border-radius: 14px; padding: 14px 14px 16px; }
+.dsec.first { margin-top: 0; font-weight: 700; color: #2a2f3a; font-size: 15px; }
+.wide.strong { background: linear-gradient(160deg, #3cc0ff, #1f9fe8); color: #fff; font-weight: 600; }
+#backupInfo { margin-top: 8px; }
+
+#inputBg { position: fixed; inset: 0; z-index: 26; background: rgba(20,40,60,.45); display: grid; place-items: center; padding: 20px; }
+#inputValue { width: 100%; font: inherit; font-size: 18px; padding: 10px 12px; border: 1px solid #cfd6de; border-radius: 10px; }
+#inputHint { margin: 8px 0 0; min-height: 0; }
+
+/* ---------- 2차 수정 ---------- */
+#sortRow { justify-content: flex-end; }
+#colorChip { height: 34px; }
+#noteDates { position: relative; flex: none; display: flex; justify-content: space-between; align-items: center; padding: 6px 10px 2px; font-size: 15px; color: #7a7f87; }
+#noteC { color: inherit; padding: 2px 4px 2px 0; }
+#noteC:disabled { color: inherit; cursor: default; }
+#timePop { position: absolute; left: 14px; top: 34px; z-index: 5; min-width: 250px; padding: 12px 16px; background: #f1f1f1; border-radius: 3px; box-shadow: 0 3px 10px rgba(0,0,0,.28); color: #1d2433; font-size: 17px; line-height: 1.4; }
+#timePop small { display: block; font-size: 13.5px; color: #7a7f87; margin-top: 10px; }
+#timePop small:first-child { margin-top: 0; }
+#noteTitleInput { flex: 1; min-width: 0; height: 44px; font: inherit; font-size: 20px; padding: 0 8px; border: 1px solid rgba(0,0,0,.25); border-radius: 2px; background: #fffaf2; color: #111; }
+#noteColorBtn { flex: none; width: 34px; height: 34px; margin-left: 8px; border-radius: 5px; border: 1px solid rgba(0,0,0,.28); }
+.ntop #noteFmtBtn { width: 38px; }
+.ntop .aa { font-size: 21px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+#noteOpts { flex: none; display: flex; align-items: center; gap: 8px; padding: 6px 10px; color: #3b4452; font-size: 14px; }
+#noteFolderBtn { display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; background: #fff; border: 1px solid #aeb7c0; border-radius: 8px; color: #1d2433; font-size: 15px; }
+#noteFolderBtn svg { width: 18px; height: 18px; }
+#noteFolderBtn b { font-weight: 600; }
+#noteFolderBtn i { font-style: normal; color: #5f6b7a; }
+#noteEdit { flex: 1; min-height: 0; overflow-y: auto; outline: none; white-space: pre-wrap; overflow-wrap: anywhere; background-attachment: local; }
+#noteEdit:empty::before { content: attr(data-ph); color: #8a8f96; }
+#noteColorBg, #folderPick { position: fixed; inset: 0; z-index: 12; background: rgba(20,30,40,.42); display: grid; place-items: center; padding: 16px; }
+.vsTitle { padding: 18px 24px 2px; font-size: 19px; font-weight: 700; }
+#folderPickList { padding: 6px 0 12px; max-height: 60vh; overflow-y: auto; }
+#fmtBg { position: fixed; inset: 0; z-index: 7; background: rgba(20,30,40,.12); }
+#palette { z-index: 8; }
+#restoreBg { position: fixed; inset: 0; z-index: 26; background: rgba(20,40,60,.45); display: grid; place-items: center; padding: 20px; }
+#restoreList { display: flex; flex-direction: column; gap: 6px; max-height: 330px; overflow-y: auto; }
+.rp { flex: none; display: block; width: 100%; padding: 10px 12px; text-align: left; border: 1.5px solid #dfe5ea; border-radius: 10px; }
+.rp b { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
+.rp span { font-size: 13px; color: #7d8590; }
+.rp.on { border-color: #29a8f0; background: #e3f4fe; }
+#restoreYes:disabled { opacity: .45; }
+#trashView { position: fixed; inset: 0; z-index: 6; display: flex; flex-direction: column; background: #e9eef2; }
+#trashList { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 6px 24px; display: flex; flex-direction: column; gap: 5px; }
+.tr { flex: none; display: flex; align-items: center; gap: 6px; padding: 10px; background: var(--bg); border-left: 7px solid var(--bar); }
+.tr .info { flex: 1; min-width: 0; }
+.tr b { display: flex; align-items: center; gap: 4px; font-size: 16.5px; }
+.tr b em { font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.tr b svg { width: 15px; height: 15px; flex: none; }
+.tr span { font-size: 13px; color: #5f6b7a; }
+.tr button { flex: none; padding: 7px 9px; border-radius: 8px; background: rgba(255,255,255,.75); color: #1478b8; font-size: 13.5px; }
+.tr button.red { color: #c62828; }
+
+/* ---------- 3차 수정 ---------- */
+.grid .nc, .large .nc { display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; }
+.grid .nc b, .large .nc b { flex: none; }
+.grid .nc p, .large .nc p { flex: 1; min-height: 0; }
+#noteUndoBar { flex: none; display: flex; align-items: center; justify-content: center; gap: 64px; height: 52px; padding-bottom: env(safe-area-inset-bottom); background: rgba(255,255,255,.45); border-top: 1px solid rgba(0,0,0,.12); }
+#noteUndoBar button { width: 56px; height: 46px; display: grid; place-items: center; color: #3b4452; }
+#noteUndoBar button:disabled { color: #3b4452; opacity: .28; cursor: default; }
+#noteUndoBar svg { width: 28px; height: 28px; stroke-width: 2.4; }
+#noteMenu button[hidden] { display: none; }
 </style>
 </head>
 <body>
@@ -150,18 +338,12 @@ svg .f { fill: currentColor; stroke: none; }
 <section id="monthView">
   <header class="top">
     <button id="prevBtn" class="arrow" aria-label="지난달"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
-    <button id="monthBtn" class="title">2026년 10월 <span class="caret">▾</span></button>
+    <button id="monthBtn" class="title">2026년 10월</button>
     <button id="nextBtn" class="arrow" aria-label="다음달"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
     <input type="month" id="monthInput" class="hiddenInput">
     <div class="sp"></div>
     <button id="todayBtn" class="pill-sm">오늘</button>
-    <button id="cloudBtn" class="icon" aria-label="동기화">
-      <svg viewBox="0 0 24 24"><path d="M7 18.5a4.5 4.5 0 01-.6-8.96A6 6 0 0118 9a4.2 4.2 0 01-.6 9.5z"/></svg>
-      <i class="dot"></i>
-    </button>
-    <button id="menuBtn" class="icon" aria-label="메뉴">
-      <svg viewBox="0 0 24 24"><circle cx="4.5" cy="6" r="1.4" class="f"/><circle cx="4.5" cy="12" r="1.4" class="f"/><circle cx="4.5" cy="18" r="1.4" class="f"/><path d="M9 6h11M9 12h11M9 18h11"/></svg>
-    </button>
+    
   </header>
   <div id="installBar" hidden>
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 19h14"/></svg>
@@ -183,45 +365,179 @@ svg .f { fill: currentColor; stroke: none; }
       <input type="date" id="dateInput" class="hiddenInput">
       <div id="daySub">오늘</div>
     </div>
-    <button id="dayMenuBtn" class="icon" aria-label="메뉴">
-      <svg viewBox="0 0 24 24"><circle cx="4.5" cy="6" r="1.4" class="f"/><circle cx="4.5" cy="12" r="1.4" class="f"/><circle cx="4.5" cy="18" r="1.4" class="f"/><path d="M9 6h11M9 12h11M9 18h11"/></svg>
-    </button>
+    <div class="icon"></div>
   </header>
   <div class="cardWrap"><div id="card"></div></div>
   <footer class="dbar">
     <button class="cbtn" id="doneBtn" aria-label="완료 표시"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
-    <button class="cbtn" id="paletteBtn" aria-label="글자색·형광펜"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 100 18c1.2 0 1.6-.9 1.2-1.8-.5-1.1.2-2.2 1.4-2.2H17a4 4 0 004-4c0-5.5-4-10-9-10z"/><circle cx="7.5" cy="11" r="1.2" class="f"/><circle cx="10" cy="7" r="1.2" class="f"/><circle cx="14.5" cy="7" r="1.2" class="f"/></svg></button>
+    <button class="cbtn" id="paletteBtn" aria-label="글자 꾸미기"><span class="aa">가</span></button>
     <button class="cbtn" id="addRowBtn" aria-label="줄 추가"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
     <div class="sp"></div>
     <button id="saveBtn">저장</button>
   </footer>
-  <div id="palette" class="sheet" hidden>
-    <div class="sheetTitle">글자색</div><div class="swatches" id="textSw"></div>
-    <div class="sheetTitle">형광펜</div><div class="swatches" id="hlSw"></div>
+</section>
+
+<!-- 메모 -->
+<section id="memoView" class="tabPage" hidden>
+  <header class="top">
+    <button id="memoBack" class="arrow" aria-label="폴더 목록으로" hidden><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div id="memoTitle" class="title memoT">메모</div>
+    <div class="sp"></div>
+    <button class="icon colorBtn" aria-label="컬러, 정렬, 보기"><svg viewBox="0 0 24 24" class="four"><rect x="3" y="3" width="8.4" height="8.4" fill="#4fb3d9"/><rect x="12.6" y="3" width="8.4" height="8.4" fill="#e0d832"/><rect x="3" y="12.6" width="8.4" height="8.4" fill="#9a93c7"/><rect x="12.6" y="12.6" width="8.4" height="8.4" fill="#f0683c"/></svg></button>
+  </header>
+  <div id="sortRow" hidden><button id="colorChip"></button></div>
+  <div id="folderTools" hidden><button id="folderRename">폴더 이름 변경</button><button id="folderDelete">폴더 삭제</button></div>
+  <div id="memoList" class="grid"></div>
+  <button id="noteFab" aria-label="새 메모">+</button>
+</section>
+
+<!-- 검색 -->
+<section id="searchView" class="tabPage" hidden>
+  <header class="top searchTop">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg>
+    <input id="searchInput" type="search" placeholder="검색" autocomplete="off">
+  </header>
+  <div id="searchResult"></div>
+</section>
+
+<!-- 설정 -->
+<section id="settingsView" class="tabPage" hidden>
+  <header class="top"><div class="title memoT">설정</div></header>
+  <div class="setScroll">
+    <div class="setCard">
+      <button id="restoreBtn" class="wide strong" style="margin:0">복원</button>
+      <button id="archiveBtn" class="wide">메모 저장소</button>
+      <p class="small muted" id="restoreDesc" style="margin:8px 0 0"></p>
+    </div>
+    <div class="setCard" id="trashCard">
+      <button id="trashBtn" class="wide" style="margin:0">메모 휴지통</button>
+      <p class="small muted" style="margin:8px 0 0">삭제한 메모는 30일 동안 보관됩니다.</p>
+    </div>
+    <div class="setCard">
+      <div class="dsec first">사용자 선택</div>
+      <div id="userList"></div>
+      <div class="dsec">이름 바꾸기 / 추가</div>
+      <div class="drow"><input id="nameInput" placeholder="사용자 이름" maxlength="30"><button id="renameBtn">변경</button></div>
+      <button id="addUserBtn" class="wide">+ 새 사용자 추가</button>
+      <button id="delUserBtn" class="wide danger">현재 사용자 삭제</button>
+      <div class="dsec">보관된(삭제된) 사용자</div>
+      <div id="deletedList" class="small muted">불러오는 중…</div>
+    </div>
+    <div class="setCard">
+      <div class="dsec first">동기화</div>
+      <div id="syncInfo" class="small"></div>
+      <button id="syncBtn" class="wide">지금 동기화</button>
+      <div class="dsec">구글 계정</div>
+      <div id="connInfo" class="small"></div>
+      <button id="connBtn" class="wide">로그아웃</button>
+      <button id="installBtn" class="wide" hidden>휴대폰 홈 화면에 설치하는 방법</button>
+      <p class="small muted">PC의 바탕화면 달력과 같은 사용자를 고르면 같은 일정이 보입니다.<br>버전 <span id="ver"></span></p>
+    </div>
   </div>
 </section>
 
-<!-- 메뉴 (사용자) -->
-<div id="drawerBg" hidden></div>
-<aside id="drawer" hidden>
-  <div class="dhead">바탕화면달력</div>
-  <div class="dsec">사용자 선택</div>
-  <div id="userList"></div>
-  <div class="dsec">이름 바꾸기 / 추가</div>
-  <div class="drow"><input id="nameInput" placeholder="사용자 이름" maxlength="30"><button id="renameBtn">변경</button></div>
-  <button id="addUserBtn" class="wide">+ 새 사용자 추가</button>
-  <button id="delUserBtn" class="wide danger">현재 사용자 삭제</button>
-  <div class="dsec">보관된(삭제된) 사용자 — 일정이 그대로 남아 있어 복원할 수 있습니다</div>
-  <div id="deletedList" class="small muted">불러오는 중…</div>
-  <div class="dsec">동기화</div>
-  <div id="syncInfo" class="small"></div>
-  <button id="syncBtn" class="wide">지금 동기화</button>
-  <div class="dsec">구글 계정</div>
-  <div id="connInfo" class="small"></div>
-  <button id="connBtn" class="wide">로그아웃</button>
-  <button id="installBtn" class="wide" hidden>휴대폰 홈 화면에 설치하는 방법</button>
-  <p class="small muted">PC의 바탕화면 달력과 같은 사용자를 고르면 같은 일정이 보입니다.<br>홈 화면에 추가: 브라우저 메뉴(⋮ 또는 공유) → “홈 화면에 추가”.<br>버전 <span id="ver"></span></p>
-</aside>
+<!-- 메모 한 장 -->
+<section id="noteView" hidden>
+  <header class="ntop">
+    <button id="noteBack" class="icon" aria-label="뒤로"></button>
+    <div id="noteTitle"></div>
+    <input id="noteTitleInput" placeholder="제목" maxlength="80" autocomplete="off" hidden>
+    <button id="noteColorBtn" aria-label="메모 색" hidden></button>
+    <button id="noteFmtBtn" class="icon" aria-label="글자 꾸미기" hidden><span class="aa">가</span></button>
+    <button id="noteEditBtn" class="icon" aria-label="입력 및 수정"></button>
+    <button id="noteMoreBtn" class="icon" aria-label="메모 설정"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.9" class="f"/><circle cx="12" cy="12" r="1.9" class="f"/><circle cx="12" cy="19" r="1.9" class="f"/></svg></button>
+  </header>
+  <div id="noteMenu" hidden>
+    <button data-act="find">찾기</button>
+    <button data-act="lock" id="noteLockItem">잠금</button>
+    <button data-act="save" id="noteSaveItem">저장</button>
+    <button data-act="archive" id="noteArchiveItem">저장소 보관</button>
+    <button data-act="delete" id="noteDeleteItem" class="red">삭제</button>
+  </div>
+  <div id="findBar" hidden>
+    <input id="findInput" type="search" placeholder="이 메모에서 찾기" autocomplete="off">
+    <span id="findCount">0/0</span>
+    <button id="findPrev" aria-label="이전"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button>
+    <button id="findNext" aria-label="다음"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+    <button id="findClose" aria-label="찾기 닫기">✕</button>
+  </div>
+  <div id="noteDates">
+    <button id="noteC"></button><span id="noteM"></span>
+    <div id="timePop" hidden><small>생성 시간</small><div id="timeCreated"></div><small>수정 시간</small><div id="timeModified"></div></div>
+  </div>
+  <div id="noteOpts" hidden><span>폴더</span><button id="noteFolderBtn"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 014.5 6H10l2 2.5h7.5A1.5 1.5 0 0121 10v8.5a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 18.5z"/></svg><b id="noteFolderName"></b><i>▾</i></button></div>
+  <div id="noteScroll"><div id="noteRead" class="lined"></div></div>
+  <div id="noteEdit" class="lined" contenteditable="true" data-ph="메모를 입력하세요" hidden></div>
+  <div id="noteUndoBar" hidden>
+    <button id="noteUndo" aria-label="되돌리기" disabled><svg viewBox="0 0 24 24"><path d="M8 5L3.500 9.500 8 14"/><path d="M4 9.500h10a6 6 0 010 12h-3"/></svg></button>
+    <button id="noteRedo" aria-label="다시 하기" disabled><svg viewBox="0 0 24 24"><path d="M16 5l4.500 4.500L16 14"/><path d="M20 9.500H10a6 6 0 000 12h3"/></svg></button>
+  </div>
+</section>
+
+<!-- 컬러 · 정렬 · 보기 -->
+<div id="vsBg" hidden>
+  <div class="vs">
+    <div class="vsTabs">
+      <button data-vt="color"><svg viewBox="0 0 24 24"><path class="f" d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z"/></svg>컬러</button>
+      <button data-vt="sort"><svg viewBox="0 0 24 24"><path class="f" d="M3 3h6v6H3zM10.5 3h6v6h-6zM18 3h3v6h-3zM3 10.5h6v6H3zM10.5 10.5h6v6h-6zM3 18h6v3H3z"/></svg>정렬</button>
+      <button data-vt="view"><svg viewBox="0 0 24 24"><path class="f" d="M3 3h5v5H3zM9.5 3h5v5h-5zM16 3h5v5h-5zM3 9.5h5v5H3zM9.5 9.5h5v5h-5zM16 9.5h5v5h-5zM3 16h5v5H3zM9.5 16h5v5h-5zM16 16h5v5h-5z"/></svg>보기</button>
+    </div>
+    <div id="vsBody"></div>
+  </div>
+</div>
+
+<!-- 메모 색 -->
+<div id="noteColorBg" hidden><div class="vs"><div class="vsTitle">메모 색</div><div class="csGrid" id="noteColorGrid"></div></div></div>
+<!-- 폴더 고르기 -->
+<div id="folderPick" hidden><div class="vs"><div class="vsTitle">저장할 폴더</div><div id="folderPickList"></div></div></div>
+
+<!-- 글자 꾸미기 (일정 · 메모 같이 사용) -->
+<div id="fmtBg" hidden></div>
+<div id="palette" class="sheet" hidden>
+  <div class="fmtHead"><b>글자 꾸미기</b><button id="fmtClose">완료</button></div>
+  <div class="fmtHint" id="fmtHint"></div>
+  <div class="sheetTitle">글씨체</div><div class="chips" id="fontChips"></div>
+  <div class="sheetTitle">크기</div><div class="chips" id="sizeChips"></div>
+  <div class="sheetTitle">굵기</div><div class="chips" id="weightChips"></div>
+  <div class="sheetTitle">글씨색</div><div class="swatches" id="textSw"></div>
+  <div class="sheetTitle">형광펜</div><div class="swatches" id="hlSw"></div>
+  <div class="chips tools"><button class="chip" id="clearFmtBtn">서식 지우기</button></div>
+</div>
+
+<!-- 복원 -->
+<div id="restoreBg" hidden>
+  <div class="pbox">
+    <div class="ptitle">정말 복원하겠습니까?</div>
+    <p class="small muted" id="restoreText" style="margin:0 0 8px"></p>
+    <div id="restoreList"></div>
+    <div class="drow" style="margin-top:12px"><button id="restoreNo" class="wide" style="margin:0">취소</button><button id="restoreYes" class="wide strong" style="margin:0" disabled>복원</button></div>
+  </div>
+</div>
+
+<!-- 휴지통 -->
+<section id="trashView" hidden>
+  <header class="top"><button id="trashBack" class="arrow" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><div class="title">메모 휴지통</div></header>
+  <div id="trashList"></div>
+</section>
+
+<!-- 입력 창 (폴더 이름, 잠금 비밀번호) -->
+<div id="inputBg" hidden>
+  <div class="pbox">
+    <div class="ptitle" id="inputTitle"></div>
+    <input id="inputValue">
+    <p class="small muted" id="inputHint"></p>
+    <div class="drow" style="margin-top:12px"><button id="inputNo" class="wide" style="margin:0">취소</button><button id="inputYes" class="wide strong" style="margin:0">확인</button></div>
+  </div>
+</div>
+
+<!-- 아래 메뉴 -->
+<nav id="tabbar">
+  <button data-tab="memo"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M8.5 9h7M8.5 13h7M8.5 17h4M9 2v4M15 2v4"/></svg><span>메모</span></button>
+  <button data-tab="cal" class="on"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>달력</span></button>
+  <button id="cloudBtn" aria-label="동기화"><svg viewBox="0 0 24 24"><path d="M7 18.5a4.5 4.5 0 01-.6-8.96A6 6 0 0118 9a4.2 4.2 0 01-.6 9.5z"/></svg><i class="dot"></i><span>동기화</span></button>
+  <button data-tab="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg><span>검색</span></button>
+  <button data-tab="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.500V21M3 12h2.500M18.500 12H21M5.600 5.600l1.800 1.800M16.600 16.600l1.800 1.800M5.600 18.400l1.800-1.800M16.600 7.400l1.800-1.800"/></svg><span>설정</span></button>
+</nav>
 
 <!-- 확인 창 -->
 <div id="confirmBg" hidden>
@@ -238,7 +554,7 @@ svg .f { fill: currentColor; stroke: none; }
   <div class="pbox">
     <div class="ptitle">누구의 달력인가요?</div>
     <div id="pickList"></div>
-    <p class="small muted">나중에 오른쪽 위 메뉴에서 바꿀 수 있습니다.</p>
+    <p class="small muted">나중에 아래 [설정]에서 바꿀 수 있습니다.</p>
   </div>
 </div>
 <!-- 구글 로그인 -->
@@ -709,12 +1025,13 @@ svg .f { fill: currentColor; stroke: none; }
                     el.replaceWith(...el.childNodes);
                     continue;
                 }
-                const {color: color, backgroundColor: bg, fontWeight: fw, fontFamily: ff} = el.style;
+                const {color: color, backgroundColor: bg, fontWeight: fw, fontFamily: ff, fontSize: fsz} = el.style;
                 for (const a of [ ...el.attributes ]) el.removeAttribute(a.name);
                 if (color) el.style.color = color;
                 if (bg && bg !== "transparent" && bg !== "rgba(0, 0, 0, 0)") el.style.backgroundColor = bg;
-                if (fw && fw !== "normal" && fw !== "400") el.style.fontWeight = fw;
+                if (fw && fw !== "normal") el.style.fontWeight = fw;
                 if (ff) el.style.fontFamily = ff;
+                if (/^[\d.]+px$/.test(fsz)) el.style.fontSize = fsz;
                 if (el.tagName === "SPAN" && !el.getAttribute("style")) el.replaceWith(...el.childNodes);
             }
         };
@@ -891,6 +1208,77 @@ svg .f { fill: currentColor; stroke: none; }
             name: "사용자1"
         } ];
         var ID_RE = /^[A-Za-z0-9_-]{1,40}$/;
+        var SCOPE_MSG = '구글 로그인 때 "구글 드라이브" 권한에 체크하지 않았습니다. 로그아웃한 뒤 다시 로그인하면서, 권한 화면의 구글 드라이브 항목에 체크하고 [계속]을 눌러 주세요.';
+        var API_OFF_MSG = '이 앱의 Google Cloud 프로젝트에서 "Google Drive API"가 꺼져 있습니다. 만든 사람이 Google Cloud → API 및 서비스 → 라이브러리 → Google Drive API → [사용] 을 눌러야 합니다.';
+        function driveError(status, detail) {
+            var reason = "", message = "";
+            try {
+                var e = JSON.parse(detail).error || {};
+                message = e.message || "";
+                reason = ((e.errors || [])[0] || {}).reason || "";
+                (e.details || []).forEach(function(d) {
+                    if (d.reason) reason = reason || d.reason;
+                });
+            } catch (x) {}
+            var text = reason + " " + message;
+            var err;
+            if (status === 401) err = Object.assign(new Error("구글 로그인이 만료되었습니다. 다시 로그인해 주세요."), {
+                code: "auth"
+            }); else if (/insufficient|SCOPE/i.test(text)) err = Object.assign(new Error(SCOPE_MSG), {
+                code: "scope"
+            }); else if (/accessNotConfigured|SERVICE_DISABLED|has not been used|is disabled/i.test(text)) err = Object.assign(new Error(API_OFF_MSG), {
+                code: "api-off"
+            }); else if (status === 403) err = new Error("구글 드라이브 권한이 없습니다 (" + (reason || message || status) + ")"); else if (status === 429 || /rateLimit/i.test(text)) err = new Error("구글 드라이브 요청이 너무 많습니다. 잠시 뒤 다시 시도하세요."); else err = new Error("구글 드라이브 오류 (" + status + (reason ? ", " + reason : "") + ")");
+            err.status = status;
+            err.reason = reason;
+            return err;
+        }
+        function hasDriveScope(scope) {
+            return /auth\/drive\.appdata/.test(String(scope || ""));
+        }
+        var TRASH_MS = 30 * 864e5, KEEP_DELETED_MS = 180 * 864e5, POINT_MS = 30 * 864e5;
+        function stampOf(x) {
+            return x.u || x.m || x.c || 0;
+        }
+        function mergeMemos(a, b) {
+            a = a || {};
+            b = b || {};
+            var now = Date.now(), del = {}, k;
+            for (k in a.del) del[k] = a.del[k];
+            for (k in b.del) if (!(del[k] >= b.del[k])) del[k] = b.del[k];
+            function pick(x, y) {
+                var map = {}, order = [];
+                (x || []).concat(y || []).forEach(function(n) {
+                    if (!n || !n.id) return;
+                    if (!map[n.id]) order.push(n.id);
+                    if (!map[n.id] || stampOf(n) > stampOf(map[n.id])) map[n.id] = n;
+                });
+                return order.map(function(id) {
+                    return map[id];
+                }).filter(function(n) {
+                    return !(del[n.id] >= stampOf(n));
+                });
+            }
+            var notes = pick(a.notes, b.notes).filter(function(n) {
+                if (n.trashed && now - n.trashed >= TRASH_MS) {
+                    del[n.id] = now;
+                    return false;
+                }
+                return true;
+            });
+            var folders = pick(a.folders, b.folders).sort(function(p, q) {
+                return (p.c || 0) - (q.c || 0);
+            });
+            for (k in del) if (now - del[k] > KEEP_DELETED_MS) delete del[k];
+            var out = {
+                notes: notes,
+                folders: folders,
+                del: del
+            };
+            var lock = a.lock && b.lock ? (a.lock.u || 0) <= (b.lock.u || 0) ? a.lock : b.lock : a.lock || b.lock;
+            if (lock) out.lock = lock;
+            return out;
+        }
         function create(opt) {
             var merge = opt.merge;
             var fetchFn = opt.fetch || fetch;
@@ -920,9 +1308,7 @@ svg .f { fill: currentColor; stroke: none; }
                         try {
                             detail = await res.text();
                         } catch (e) {}
-                        var err = new Error(res.status === 401 || res.status === 403 ? "구글 드라이브 권한이 없습니다. 다시 로그인해 주세요." : "구글 드라이브 오류 (" + res.status + ")");
-                        err.status = res.status;
-                        err.code = res.status === 401 ? "auth" : "";
+                        var err = driveError(res.status, detail);
                         err.detail = detail;
                         throw err;
                     }
@@ -1227,6 +1613,155 @@ svg .f { fill: currentColor; stroke: none; }
                 for (var j = 0; j < sids.length; j++) await syncSettings(sids[j], snap.settings[sids[j]], null, true);
                 return count;
             }
+            var EMPTY_MEMOS = {
+                notes: [],
+                folders: [],
+                del: {}
+            };
+            function loadMemos(user) {
+                return load("memos-" + user + ".json", EMPTY_MEMOS, mergeMemos);
+            }
+            async function syncMemos(user, memos) {
+                checkId(user);
+                var cur = await loadMemos(user);
+                var out = mergeMemos(cur, memos);
+                if (JSON.stringify(out) !== JSON.stringify(cur)) await save("memos-" + user + ".json", out);
+                return out;
+            }
+            var POINT_RE = /^point-([A-Za-z0-9_-]+)-(\d+)-(auto|before)-(\d+)-(\d+)\.json$/;
+            function pointsOf(user) {
+                return Object.keys(files).map(function(name) {
+                    var m = POINT_RE.exec(name);
+                    return m && m[1] === user ? {
+                        id: name,
+                        at: Number(m[2]),
+                        kind: m[3],
+                        days: Number(m[4]),
+                        notes: Number(m[5])
+                    } : null;
+                }).filter(Boolean).sort(function(a, b) {
+                    return b.at - a.at;
+                });
+            }
+            async function backupSave(user, memos, kind) {
+                checkId(user);
+                var data = await load("data-" + user + ".json", {
+                    version: 1,
+                    days: {}
+                }, combineData);
+                var m = memos ? mergeMemos(memos, {}) : await loadMemos(user);
+                var days = data.days || {}, at = Date.now();
+                var dayCount = Object.keys(days).filter(function(k) {
+                    return days[k].items && days[k].items.length;
+                }).length;
+                var noteCount = m.notes.filter(function(n) {
+                    return !n.trashed;
+                }).length;
+                var name = "point-" + user + "-" + at + "-" + (kind === "before" ? "before" : "auto") + "-" + dayCount + "-" + noteCount + ".json";
+                await save(name, {
+                    version: 1,
+                    at: at,
+                    days: days,
+                    memos: m
+                });
+                var old = pointsOf(user).filter(function(p) {
+                    return at - p.at >= POINT_MS;
+                });
+                for (var i = 0; i < old.length; i++) {
+                    var list = files[old[i].id] || [];
+                    for (var j = 0; j < list.length; j++) {
+                        try {
+                            await req("DELETE", API + "/" + list[j].id);
+                        } catch (e) {}
+                    }
+                    delete files[old[i].id];
+                }
+            }
+            async function restoreDays(user, snapDays) {
+                var name = "data-" + user + ".json", cur = await load(name, {
+                    version: 1,
+                    days: {}
+                }, combineData);
+                var curDays = cur.days || {}, now = Date.now(), out = {}, seen = {};
+                Object.keys(curDays).concat(Object.keys(snapDays)).forEach(function(k) {
+                    if (seen[k]) return;
+                    seen[k] = 1;
+                    var c = merge.normalize(k, curDays[k]) || {
+                        items: [],
+                        del: {}
+                    };
+                    var s = merge.normalize(k, snapDays[k]) || {
+                        items: [],
+                        del: {}
+                    };
+                    var del = {}, inSnap = {}, x;
+                    for (x in c.del) del[x] = c.del[x];
+                    for (x in s.del) if (!(del[x] >= s.del[x])) del[x] = s.del[x];
+                    s.items.forEach(function(it) {
+                        inSnap[it.id] = 1;
+                        delete del[it.id];
+                    });
+                    c.items.forEach(function(it) {
+                        if (!inSnap[it.id]) del[it.id] = now;
+                    });
+                    out[k] = {
+                        items: s.items.map(function(it) {
+                            return Object.assign({}, it, {
+                                t: now
+                            });
+                        }),
+                        t: now,
+                        del: del
+                    };
+                });
+                await save(name, {
+                    version: 1,
+                    days: out
+                });
+                return out;
+            }
+            async function restoreMemos(user, snapMemos) {
+                var cur = await loadMemos(user), snap = mergeMemos(snapMemos, {}), now = Date.now();
+                var del = {}, k;
+                for (k in cur.del) del[k] = cur.del[k];
+                var stamp = function(x) {
+                    delete del[x.id];
+                    return Object.assign({}, x, {
+                        u: now
+                    });
+                };
+                var notes = snap.notes.map(stamp), folders = snap.folders.map(stamp);
+                var keep = {};
+                notes.concat(folders).forEach(function(x) {
+                    keep[x.id] = 1;
+                });
+                cur.notes.concat(cur.folders).forEach(function(x) {
+                    if (!keep[x.id]) del[x.id] = now;
+                });
+                var out = {
+                    notes: notes,
+                    folders: folders,
+                    del: del
+                };
+                var lock = cur.lock || snap.lock;
+                if (lock) out.lock = lock;
+                await save("memos-" + user + ".json", out);
+                return out;
+            }
+            async function backupRestore(user, id, area) {
+                checkId(user);
+                var m = POINT_RE.exec(String(id || ""));
+                if (!m || m[1] !== user || !files[id]) throw new Error("복원할 시점을 찾을 수 없습니다");
+                var snap = await load(id, null, function(a) {
+                    return a;
+                });
+                if (!snap) throw new Error("복원할 시점을 읽을 수 없습니다");
+                return area === "memo" ? {
+                    memos: await restoreMemos(user, snap.memos)
+                } : {
+                    days: await restoreDays(user, snap.days || {})
+                };
+            }
             function call(action, p) {
                 p = p || {};
                 return serial(async function() {
@@ -1267,6 +1802,26 @@ svg .f { fill: currentColor; stroke: none; }
                         ok: true,
                         count: await importLegacy(p.snapshot)
                     };
+                    if (action === "syncMemos") return {
+                        ok: true,
+                        memos: await syncMemos(p.user, p.memos)
+                    };
+                    if (action === "backupSave") {
+                        await backupSave(p.user, p.memos, p.kind);
+                        return {
+                            ok: true
+                        };
+                    }
+                    if (action === "backupList") {
+                        checkId(p.user);
+                        return {
+                            ok: true,
+                            backups: pointsOf(p.user)
+                        };
+                    }
+                    if (action === "backupRestore") return Object.assign({
+                        ok: true
+                    }, await backupRestore(p.user, p.id, p.area));
                     throw new Error("unknown action");
                 });
             }
@@ -1315,7 +1870,10 @@ svg .f { fill: currentColor; stroke: none; }
         }
         return {
             create: create,
+            mergeMemos: mergeMemos,
             fetchLegacy: fetchLegacy,
+            hasDriveScope: hasDriveScope,
+            SCOPE_MSG: SCOPE_MSG,
             BIG_KEYS: BIG_KEYS
         };
     }();
@@ -1328,7 +1886,7 @@ svg .f { fill: currentColor; stroke: none; }
     });
     (function() {
         const $ = s => document.querySelector(s);
-        const VERSION = "2.0.2";
+        const VERSION = "2.1.0";
         const LS = {
             get(k, d) {
                 try {
@@ -1444,6 +2002,48 @@ svg .f { fill: currentColor; stroke: none; }
                         users: db.users
                     };
                 },
+                syncMemos: () => {
+                    db.memos = db.memos || {};
+                    db.memos[p.user] = DRIVE_SYNC.mergeMemos(db.memos[p.user] || {}, p.memos);
+                    save();
+                    return {
+                        memos: db.memos[p.user]
+                    };
+                },
+                backupSave: () => {
+                    (db.backups = db.backups || []).unshift({
+                        id: "b" + Date.now(),
+                        user: p.user,
+                        at: Date.now(),
+                        kind: p.kind || "manual",
+                        data: JSON.parse(JSON.stringify(db.data[p.user] || {})),
+                        memos: JSON.parse(JSON.stringify(p.memos || {
+                            notes: [],
+                            folders: []
+                        }))
+                    });
+                    db.backups = db.backups.filter(b => Date.now() - b.at < 30 * 864e5);
+                    save();
+                    return {};
+                },
+                backupList: () => ({
+                    backups: (db.backups || []).filter(b => b.user === p.user).map(b => ({
+                        id: b.id,
+                        at: b.at,
+                        kind: b.kind,
+                        days: Object.keys(b.data).length,
+                        notes: b.memos.notes.filter(n => !n.trashed).length
+                    }))
+                }),
+                backupRestore: () => {
+                    const b = (db.backups || []).find(x => x.id === p.id);
+                    db.data[p.user] = JSON.parse(JSON.stringify(b.data));
+                    save();
+                    return {
+                        days: db.data[p.user],
+                        memos: JSON.parse(JSON.stringify(b.memos))
+                    };
+                },
                 sync: () => {
                     const d = db.data[p.user] || (db.data[p.user] = {});
                     for (const k in p.days) d[k] = DAY_MERGE.mergeDay(k, d[k], p.days[k]);
@@ -1483,6 +2083,7 @@ svg .f { fill: currentColor; stroke: none; }
                 days: {}
             });
             korcal.setCustom(LS.get("dc_custom_" + userId, ""));
+            loadMemos();
         };
         const saveData = () => LS.set("dc_data_" + userId, data);
         const todayKey = () => {
@@ -1541,13 +2142,15 @@ svg .f { fill: currentColor; stroke: none; }
                             if (custom !== before) changed = true;
                         }
                     } catch (e) {}
+                    await syncMemos(uid);
                     LS.set("dc_last_sync_" + uid, Date.now());
                     setCloud("ok");
+                    autoPoint();
                     if (changed) renderPages();
                     if (showToast) toast("동기화 완료");
                 } catch (e) {
                     setCloud("error");
-                    if (e.code === "auth") renewLogin(e.message); else if (showToast) toast("동기화 실패 — 인터넷 연결을 확인하세요");
+                    if (e.code === "auth") renewLogin(e.message); else if (e.code === "scope") showSetup(e.message); else if (showToast || e.code === "api-off") toast(e.status ? e.message : "동기화 실패 — 인터넷 연결을 확인하세요", 6e3);
                 } finally {
                     syncing = null;
                     updateSyncInfo();
@@ -1594,7 +2197,7 @@ svg .f { fill: currentColor; stroke: none; }
                     const cls = [ "cell" ];
                     if (info.holiday || customHol) cls.push("hol");
                     if (info.key === tk) cls.push("today");
-                    html += `<div class="${cls.join(" ")}" data-key="${info.key}"><div class="n">${d}</div>${sub}<div class="items">${items.map(it => `<div class="it${it.d ? " done" : ""}">${sanitize(it.h)}</div>`).join("")}</div></div>`;
+                    html += `<div class="${cls.join(" ")}" data-key="${info.key}"><div class="n">${d}</div>${sub}<div class="items">${items.map(it => `<div class="it${it.d ? " done" : ""}">${sanitize(it.h).replace(/font-size:\s*([\d.]+)px/g, (m, v) => `font-size:${(v * 12 / 18).toFixed(1)}px`)}</div>`).join("")}</div></div>`;
                 }
                 html += "</div>";
             }
@@ -1605,7 +2208,7 @@ svg .f { fill: currentColor; stroke: none; }
             [ -1, 0, 1 ].forEach((o, i) => {
                 pages[i].innerHTML = monthHtml(shiftYm(ym, o));
             });
-            $("#monthBtn").innerHTML = `${ym.y}년 ${ym.m}월 <span class="caret">▾</span>`;
+            $("#monthBtn").textContent = `${ym.y}년 ${ym.m}월`;
         }
         function goMonth(target) {
             ym = target;
@@ -1783,8 +2386,9 @@ svg .f { fill: currentColor; stroke: none; }
             saveDay(true);
             dayKey = null;
             $("#dayView").hidden = true;
-            $("#monthView").hidden = false;
+            $("#monthView").hidden = tab !== "cal";
             renderPages();
+            if (tab === "search") renderSearch();
         }
         const closeDay = () => goBack(hideDay);
         const inLayer = () => !!(history.state && history.state.dcLayer);
@@ -1804,13 +2408,55 @@ svg .f { fill: currentColor; stroke: none; }
                 pushLayer();
                 return;
             }
-            if (!$("#palette").hidden) {
-                $("#palette").hidden = true;
+            if (!$("#inputBg").hidden) {
+                $("#inputNo").click();
                 pushLayer();
                 return;
             }
-            if (!$("#drawer").hidden) return hideDrawer();
+            if (!$("#restoreBg").hidden) {
+                $("#restoreBg").hidden = true;
+                pushLayer();
+                return;
+            }
+            if (!$("#palette").hidden) {
+                closeFmt();
+                pushLayer();
+                return;
+            }
+            if (!$("#noteColorBg").hidden) {
+                $("#noteColorBg").hidden = true;
+                pushLayer();
+                return;
+            }
+            if (!$("#folderPick").hidden) {
+                $("#folderPick").hidden = true;
+                pushLayer();
+                return;
+            }
+            if (!$("#vsBg").hidden) {
+                closeViewSheet();
+                pushLayer();
+                return;
+            }
+            if (!$("#noteMenu").hidden) {
+                $("#noteMenu").hidden = true;
+                pushLayer();
+                return;
+            }
+            if (!$("#findBar").hidden) {
+                closeFind();
+                pushLayer();
+                return;
+            }
+            if (!$("#noteView").hidden) return hideNote();
+            if (!$("#trashView").hidden) return hideTrash();
             if (!$("#dayView").hidden) return hideDay();
+            if (tab === "memo" && openFolder !== null) {
+                leaveFolder();
+                pushLayer();
+                return;
+            }
+            if (tab !== "cal") return setTab("cal");
         });
         function focusEnd(el) {
             el.focus();
@@ -1846,7 +2492,6 @@ svg .f { fill: currentColor; stroke: none; }
             };
             openDay(e.target.value);
         });
-        $("#dayMenuBtn").addEventListener("click", openDrawer);
         $("#card").addEventListener("click", e => {
             const chk = e.target.closest(".chk");
             if (chk) {
@@ -1898,10 +2543,8 @@ svg .f { fill: currentColor; stroke: none; }
         let lastRange = null;
         document.addEventListener("selectionchange", () => {
             const s = getSelection();
-            if (s.rangeCount && s.anchorNode && s.anchorNode.parentElement && s.anchorNode.parentElement.closest("#card .txt, #card")) {
-                const n = s.anchorNode.nodeType === 1 ? s.anchorNode : s.anchorNode.parentElement;
-                if (n.closest(".txt")) lastRange = s.getRangeAt(0).cloneRange();
-            }
+            const an = s.anchorNode && (s.anchorNode.nodeType === 1 ? s.anchorNode : s.anchorNode.parentElement);
+            if (s.rangeCount && an && an.closest("#card .txt, #noteEdit")) lastRange = s.getRangeAt(0).cloneRange();
         });
         const currentRow = () => {
             if (!lastRange) return null;
@@ -1923,20 +2566,35 @@ svg .f { fill: currentColor; stroke: none; }
             focusEnd(r.querySelector(".txt"));
         });
         $("#paletteBtn").addEventListener("click", () => {
-            $("#palette").hidden = !$("#palette").hidden;
+            if ($("#palette").hidden) openFmt(); else closeFmt();
         });
         const TEXT_COLORS = [ null, "#ff5252", "#ffa726", "#ffee58", "#69f0ae", "#40c4ff", "#b388ff", "#ff80ab" ];
         const HL_COLORS = [ null, "#fff176", "#b9f6ca", "#ffab91", "#ff9ecb", "#90caf9", "#e1bee7" ];
-        function applyFormat(cmd, color) {
+        function fmtBox() {
+            if (curNote && noteEditing) return $("#noteEdit");
             const row = currentRow();
-            if (!row) return toast("먼저 꾸밀 글자를 누르거나 선택하세요");
-            const txt = row.querySelector(".txt");
-            const s = getSelection();
-            let r = lastRange;
-            if (!r || r.collapsed) {
-                r = document.createRange();
-                r.selectNodeContents(txt);
+            if (!row) {
+                toast("먼저 꾸밀 글자를 누르거나 선택하세요");
+                return null;
             }
+            return row.querySelector(".txt");
+        }
+        function fmtRange(txt) {
+            if (lastRange && !lastRange.collapsed && txt.contains(lastRange.commonAncestorContainer)) return lastRange;
+            if (txt.id === "noteEdit") {
+                toast("글자를 길게 눌러 선택한 뒤 고르세요");
+                return null;
+            }
+            const r = document.createRange();
+            r.selectNodeContents(txt);
+            return r;
+        }
+        function applyFormat(cmd, color) {
+            const txt = fmtBox();
+            if (!txt) return;
+            const s = getSelection();
+            const r = fmtRange(txt);
+            if (!r) return;
             txt.focus();
             s.removeAllRanges();
             s.addRange(r);
@@ -1949,8 +2607,67 @@ svg .f { fill: currentColor; stroke: none; }
             } else {
                 document.execCommand("hiliteColor", false, color || "transparent");
             }
-            $("#palette").hidden = true;
+            if (s.rangeCount) lastRange = s.getRangeAt(0).cloneRange();
+            noteRecord(false);
         }
+        function styleRange(prop, value) {
+            const txt = fmtBox();
+            if (!txt) return;
+            const r = fmtRange(txt);
+            if (!r) return;
+            const frag = r.extractContents();
+            frag.querySelectorAll("span").forEach(sp => {
+                sp.style[prop] = "";
+                if (!sp.getAttribute("style")) sp.replaceWith(...sp.childNodes);
+            });
+            if (prop === "fontWeight") frag.querySelectorAll("b,strong").forEach(b => b.replaceWith(...b.childNodes));
+            const span = document.createElement("span");
+            if (value) span.style[prop] = value;
+            span.appendChild(frag);
+            r.insertNode(span);
+            const nr = document.createRange();
+            nr.selectNodeContents(span);
+            const s = getSelection();
+            s.removeAllRanges();
+            s.addRange(nr);
+            lastRange = nr.cloneRange();
+            noteRecord(false);
+        }
+        function clearFormat() {
+            const txt = fmtBox();
+            if (!txt) return;
+            const r = fmtRange(txt);
+            if (!r) return;
+            let c = r.commonAncestorContainer;
+            if (c.nodeType === 3) c = c.parentNode;
+            while (c !== txt && r.toString() === c.textContent) {
+                r.selectNode(c);
+                c = c.parentNode;
+            }
+            const frag = r.extractContents();
+            frag.querySelectorAll("span,b,strong,i,em,u,s,strike").forEach(x => x.replaceWith(...x.childNodes));
+            r.insertNode(frag);
+            noteRecord(false);
+        }
+        const FONT_OPTS = [ [ "기본", "" ], [ "고딕", '"Noto Sans KR", sans-serif' ], [ "명조", '"Nanum Myeongjo", serif' ], [ "손글씨", '"Nanum Pen Script", cursive' ], [ "둥근체", "Jua, sans-serif" ] ];
+        const SIZE_OPTS = [ 14, 16, 18, 20, 24, 28 ];
+        const WEIGHT_OPTS = [ [ "보통", "400" ], [ "굵게", "700" ], [ "아주 굵게", "900" ] ];
+        function buildChips(el, opts, apply) {
+            opts.forEach(([label, v, css]) => {
+                const b = document.createElement("button");
+                b.className = "chip";
+                b.textContent = label;
+                if (css) b.style.cssText = css;
+                keepFocus(b);
+                b.addEventListener("click", () => apply(v));
+                el.appendChild(b);
+            });
+        }
+        buildChips($("#fontChips"), FONT_OPTS.map(([n, f]) => [ n, f, f ? "font-family:" + f.replace(/"/g, "'") : "" ]), v => styleRange("fontFamily", v));
+        buildChips($("#sizeChips"), SIZE_OPTS.map(n => [ String(n), n ]), v => styleRange("fontSize", v === 18 ? "" : v + "px"));
+        buildChips($("#weightChips"), WEIGHT_OPTS.map(([n, w]) => [ n, w, "font-weight:" + w ]), v => styleRange("fontWeight", v));
+        [ "#clearFmtBtn", "#fmtClose" ].forEach(x => keepFocus($(x)));
+        $("#clearFmtBtn").addEventListener("click", clearFormat);
         function buildSwatches(el, colors, cmd) {
             colors.forEach(c => {
                 const b = document.createElement("button");
@@ -1978,9 +2695,6 @@ svg .f { fill: currentColor; stroke: none; }
             renderUsers();
             updateSyncInfo();
             $("#ver").textContent = VERSION;
-            if ($("#drawer").hidden) pushLayer();
-            $("#drawer").hidden = false;
-            $("#drawerBg").hidden = false;
             $("#connInfo").textContent = isPreview ? "미리보기 (가짜 서버)" : account ? `✔ ${account}` : "로그인 안 됨";
             $("#connBtn").textContent = account ? "로그아웃" : "구글로 로그인";
             server.call("users").then(r => {
@@ -2014,10 +2728,11 @@ svg .f { fill: currentColor; stroke: none; }
                 toast("복원 실패");
             }
         });
-        function confirmBox(title, text) {
+        function confirmBox(title, text, yes) {
             return new Promise(resolve => {
                 $("#confirmTitle").textContent = title;
                 $("#confirmText").textContent = text;
+                $("#confirmYes").textContent = yes || "삭제";
                 $("#confirmBg").hidden = false;
                 const done = v => {
                     $("#confirmBg").hidden = true;
@@ -2046,13 +2761,7 @@ svg .f { fill: currentColor; stroke: none; }
                 toast(`삭제 실패: ${err.message || err}`);
             }
         });
-        function hideDrawer() {
-            $("#drawer").hidden = true;
-            $("#drawerBg").hidden = true;
-        }
-        const closeDrawer = () => {
-            if (!$("#drawer").hidden) goBack(hideDrawer);
-        };
+        const closeDrawer = () => {};
         function selectUser(id) {
             if (dayKey) saveDay(true);
             userId = id;
@@ -2062,10 +2771,10 @@ svg .f { fill: currentColor; stroke: none; }
             renderPages();
             $("#picker").hidden = true;
             if (dayKey) openDay(dayKey);
+            if (tab === "memo") renderMemos();
+            if (tab === "settings") showBackupInfo();
             sync();
         }
-        $("#menuBtn").addEventListener("click", openDrawer);
-        $("#drawerBg").addEventListener("click", closeDrawer);
         $("#userList").addEventListener("click", e => {
             const b = e.target.closest(".urow");
             if (b) {
@@ -2135,6 +2844,9 @@ svg .f { fill: currentColor; stroke: none; }
             if (h.get("error")) return {
                 error: silent ? "" : h.get("error") === "access_denied" ? "로그인을 취소했습니다." : `로그인 실패 (${h.get("error")})`
             };
+            if (h.get("scope") && !DRIVE_SYNC.hasDriveScope(h.get("scope"))) return {
+                error: DRIVE_SYNC.SCOPE_MSG.replace("로그아웃한 뒤 ", "")
+            };
             token = {
                 t: h.get("access_token"),
                 exp: Date.now() + Number(h.get("expires_in") || 3600) * 1e3
@@ -2200,7 +2912,7 @@ svg .f { fill: currentColor; stroke: none; }
         }
         function renewLogin(msg) {
             if (isPreview) return;
-            const busy = dayKey || !$("#drawer").hidden || !$("#confirmBg").hidden;
+            const busy = dayKey || curNote || tab === "settings" || !$("#confirmBg").hidden;
             const recent = Date.now() - LS.get("dc_silent_at", 0) < 12e4;
             if (account && configured && navigator.onLine && !busy && !recent) {
                 LS.set("dc_silent_at", Date.now());
@@ -2324,11 +3036,1206 @@ svg .f { fill: currentColor; stroke: none; }
         });
         $("#installBtn").hidden = !isWebApp || standalone;
         $("#installBtn").addEventListener("click", () => {
-            closeDrawer();
+            showTab("cal");
             if (installEvt) doInstall(); else showInstallBar(true);
         });
         showInstallBar();
         if (isWebApp && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+        let tab = "cal";
+        let areaScope = "cal";
+        const TAB_VIEW = {
+            cal: "#monthView",
+            memo: "#memoView",
+            search: "#searchView",
+            settings: "#settingsView"
+        };
+        function setTab(t) {
+            tab = t;
+            if ((t === "memo" || t === "cal") && areaScope !== t) {
+                areaScope = t;
+                $("#searchInput").value = "";
+            }
+            Object.keys(TAB_VIEW).forEach(k => {
+                $(TAB_VIEW[k]).hidden = k !== t;
+            });
+            document.querySelectorAll("#tabbar [data-tab]").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+            if (t === "cal") renderPages();
+            if (t === "memo") renderMemos();
+            if (t === "settings") {
+                openDrawer();
+                showBackupInfo();
+                paintSettings();
+            }
+            if (t === "search") renderSearch();
+        }
+        function showTab(t) {
+            if (t === tab) return;
+            if (tab === "cal") {
+                pushLayer();
+                setTab(t);
+                return;
+            }
+            if (t === "cal" && inLayer()) {
+                history.back();
+                return;
+            }
+            setTab(t);
+        }
+        document.querySelectorAll("#tabbar [data-tab]").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
+        const NOTE_COLORS = [ {
+            k: "red",
+            n: "빨강",
+            sw: "#fb7884",
+            bar: "#e5525c",
+            bg: "#ffe6e8",
+            line: "#f7c9ce"
+        }, {
+            k: "orange",
+            n: "주황",
+            sw: "#ffa852",
+            bar: "#ffa426",
+            bg: "#ffead6",
+            line: "#f6d2ad"
+        }, {
+            k: "yellow",
+            n: "노랑",
+            sw: "#f6d969",
+            bar: "#f0d145",
+            bg: "#fdf6bb",
+            line: "#ecdf8e"
+        }, {
+            k: "green",
+            n: "초록",
+            sw: "#9bd76d",
+            bar: "#7cc24a",
+            bg: "#e6f6d9",
+            line: "#c9e5b1"
+        }, {
+            k: "blue",
+            n: "파랑",
+            sw: "#86a8ff",
+            bar: "#6f93f2",
+            bg: "#e4ebff",
+            line: "#c6d3f7"
+        }, {
+            k: "purple",
+            n: "보라",
+            sw: "#b588de",
+            bar: "#7f3fbf",
+            bg: "#efe4fb",
+            line: "#d9c5ef"
+        }, {
+            k: "black",
+            n: "검정",
+            sw: "#333333",
+            bar: "#111111",
+            bg: "#c9c9c9",
+            line: "#a9a9a9",
+            fg: "#fff"
+        }, {
+            k: "gray",
+            n: "회색",
+            sw: "#cccccc",
+            bar: "#8a8a8a",
+            bg: "#ececec",
+            line: "#d2d2d2"
+        }, {
+            k: "white",
+            n: "흰색",
+            sw: "#f4f4f4",
+            bar: "#d8d8d8",
+            bg: "#fbfbfb",
+            line: "#e6e6e6"
+        } ];
+        const colorOf = k => NOTE_COLORS.find(c => c.k === k) || NOTE_COLORS[2];
+        const SORTS = {
+            m: "변경 시간 순으로",
+            c: "생성 시간 순으로",
+            t: "제목 순으로",
+            color: "색상 순으로"
+        };
+        const SORT_ICONS = {
+            m: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+            c: '<circle cx="11" cy="12" r="8"/><path d="M11 8v4l2 2M19 3v6M16 6h6"/>',
+            t: '<path d="M4 20l5-14 5 14M6 15h6M16 7h5l-5 8h5"/>',
+            color: '<path class="f" d="M3 4h5v5H3zM10 4h5v5h-5zM17 4h4v5h-4zM3 11h5v5H3zM10 11h5v5h-5zM3 18h5v3H3z"/>'
+        };
+        const VIEWS = {
+            list: "목록",
+            detail: "자세히",
+            grid: "바둑판",
+            large: "큰 바둑판",
+            folder: "폴더"
+        };
+        const VIEW_ICONS = {
+            list: '<path class="f" d="M4 5h16v3.500H4zM4 10.300h16v3.500H4zM4 15.500h16V19H4z"/>',
+            detail: '<path class="f" d="M4 4h16v7H4zM4 13h16v7H4z"/>',
+            grid: '<path class="f" d="M4 4h4.500v4.500H4zM9.800 4h4.500v4.500H9.800zM15.500 4H20v4.500h-4.500zM4 9.800h4.500v4.500H4zM9.800 9.800h4.500v4.500H9.800zM15.500 9.800H20v4.500h-4.500zM4 15.500h4.500V20H4zM9.800 15.500h4.500V20H9.800zM15.500 15.500H20V20h-4.500z"/>',
+            large: '<path class="f" d="M4 4h7.300v7.300H4zM12.700 4H20v7.300h-7.300zM4 12.700h7.300V20H4zM12.700 12.700H20V20h-7.300z"/>',
+            folder: '<path class="f" d="M3 6.500A1.500 1.500 0 014.500 5H10l2 2.500h7.500A1.500 1.500 0 0121 9v9.500a1.500 1.500 0 01-1.500 1.500h-15A1.500 1.500 0 013 18.500z"/>'
+        };
+        const ICON_LOCK = '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>';
+        const ICON_PEN = '<svg viewBox="0 0 24 24"><path class="f" d="M4 20v-3.800L15.600 4.600a1.500 1.500 0 012.100 0l1.700 1.700a1.500 1.500 0 010 2.100L7.800 20z"/></svg>';
+        const ICON_BACK = '<svg viewBox="0 0 24 24"><path d="M20 12H5M11 6l-6 6 6 6"/></svg>';
+        const ICON_CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12.500l4.500 4.500L19 7.500"/></svg>';
+        const ICON_ARCHIVE = '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v9.500A1.500 1.500 0 006.500 20h11a1.500 1.500 0 001.500-1.500V9M10 13h4"/></svg>';
+        const ICON_FOLDER = '<svg viewBox="0 0 24 24"><path d="M3 7.500A1.500 1.500 0 014.500 6H10l2 2.500h7.500A1.500 1.500 0 0121 10v8.500a1.500 1.500 0 01-1.500 1.500h-15A1.500 1.500 0 013 18.500z"/></svg>';
+        const FOLDER_TINTS = [ [ "#fdf6bb", "#f3df74" ], [ "#e4ebff", "#a9c0fa" ], [ "#e6f6d9", "#b2e08a" ], [ "#ffead6", "#ffc58c" ], [ "#efe4fb", "#cda9ec" ] ];
+        let memoDb = {
+            notes: [],
+            folders: [],
+            del: {}
+        };
+        const memoPrefs = Object.assign({
+            sort: "color",
+            view: "grid",
+            color: null
+        }, LS.get("dc_memo_prefs", {}));
+        let openFolder = null;
+        const TRASH_MS = 30 * 864e5;
+        function loadMemos() {
+            memoDb = DRIVE_SYNC.mergeMemos(LS.get("dc_memos_" + userId, {
+                notes: [],
+                folders: [],
+                del: {}
+            }), {});
+            openFolder = null;
+        }
+        const liveNotes = () => memoDb.notes.filter(n => !n.trashed);
+        const memoForStore = () => Object.assign({}, memoDb, {
+            notes: memoDb.notes.map(n => n.locked ? Object.assign({}, n, {
+                body: ""
+            }) : n)
+        });
+        const saveMemos = () => {
+            LS.set("dc_memos_" + userId, memoForStore());
+            sync();
+        };
+        const touch = x => {
+            x.u = Date.now();
+        };
+        function applyMemos(m) {
+            const before = JSON.stringify(memoForStore());
+            const cur = curNote, byId = new Map(memoDb.notes.map(n => [ n.id, n ]));
+            const list = m.notes.map(x => {
+                const o = byId.get(x.id);
+                if (o && (o === cur || o === x)) return o;
+                if (o) {
+                    Object.keys(o).forEach(k => delete o[k]);
+                    return Object.assign(o, x);
+                }
+                return x;
+            });
+            if (cur && !curIsNew && !list.includes(cur)) list.push(cur);
+            memoDb.notes = list;
+            memoDb.folders = m.folders;
+            memoDb.del = m.del;
+            if (m.lock) memoDb.lock = m.lock;
+            LS.set("dc_memos_" + userId, memoForStore());
+            if (JSON.stringify(memoForStore()) !== before && tab === "memo" && !cur) renderMemos();
+        }
+        async function syncMemos(uid) {
+            const r = await server.call("syncMemos", {
+                user: uid,
+                memos: memoForStore()
+            });
+            if (uid === userId) applyMemos(DRIVE_SYNC.mergeMemos(memoForStore(), r.memos));
+        }
+        const savePrefs = () => LS.set("dc_memo_prefs", memoPrefs);
+        const newNoteId = () => "n" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        const plainBody = h => {
+            const d = document.createElement("div");
+            d.innerHTML = String(h || "").replace(/<br\s*\/?>/gi, "\n");
+            return d.textContent;
+        };
+        const noteParts = n => {
+            const text = plainBody(n.body);
+            if (n.title) return {
+                title: n.title,
+                rest: text
+            };
+            const lines = text.split("\n");
+            const i = lines.findIndex(l => l.trim());
+            return i < 0 ? {
+                title: "",
+                rest: ""
+            } : {
+                title: lines[i].trim(),
+                rest: lines.slice(i + 1).join("\n")
+            };
+        };
+        const ARCHIVE = "archive", ARCHIVE_NAME = "저장소";
+        const folderName = id => id === ARCHIVE ? ARCHIVE_NAME : id === "none" ? "폴더 없음" : (memoDb.folders.find(f => f.id === id) || {}).name || "";
+        const pad = n => String(n).padStart(2, "0");
+        const fmtShort = t => {
+            const d = new Date(t);
+            return `${d.getMonth() + 1}/${d.getDate()}`;
+        };
+        function sortedNotes(list) {
+            const colorIdx = n => NOTE_COLORS.findIndex(c => c.k === n.color);
+            const by = {
+                m: (a, b) => b.m - a.m,
+                c: (a, b) => b.c - a.c,
+                t: (a, b) => noteParts(a).title.localeCompare(noteParts(b).title, "ko"),
+                color: (a, b) => colorIdx(a) - colorIdx(b) || b.m - a.m
+            }[memoPrefs.sort];
+            return list.slice().sort(by);
+        }
+        function noteCard(n) {
+            const c = colorOf(n.color), p = noteParts(n);
+            const body = n.locked ? '<span class="lockText">잠긴 메모</span>' : esc(p.rest);
+            return `<button class="nc" data-id="${n.id}" style="--bar:${c.bar};--bg:${c.bg}"><b>${n.locked ? ICON_LOCK : ""}<em>${esc(p.title) || "(제목 없음)"}</em></b><p>${body}</p><time>${fmtShort(n.m)}</time></button>`;
+        }
+        function renderMemos() {
+            const list = $("#memoList");
+            if (memoPrefs.view !== "folder" && openFolder !== ARCHIVE) openFolder = null;
+            const inFolder = openFolder !== null;
+            $("#memoTitle").textContent = inFolder ? folderName(openFolder) : "메모";
+            $("#memoTitle").classList.toggle("memoT", !inFolder);
+            $("#memoBack").hidden = !inFolder;
+            $("#folderTools").hidden = !inFolder || openFolder === "none" || openFolder === ARCHIVE;
+            $("#noteFab").hidden = openFolder === ARCHIVE;
+            const chip = $("#colorChip");
+            $("#sortRow").hidden = !memoPrefs.color;
+            if (memoPrefs.color) chip.innerHTML = `<i style="background:${colorOf(memoPrefs.color).sw}"></i>${colorOf(memoPrefs.color).n}만 ✕`;
+            const byColor = n => !memoPrefs.color || n.color === memoPrefs.color;
+            const notes = liveNotes().filter(n => !n.archived && byColor(n));
+            const archived = liveNotes().filter(n => n.archived && byColor(n));
+            if (memoPrefs.view === "folder" && !inFolder) {
+                list.className = "folder";
+                const row = (id, name, count, i) => {
+                    const t = FOLDER_TINTS[i % FOLDER_TINTS.length];
+                    return `<button class="fd" data-folder="${id}" style="--fb:${t[0]};--fl:${t[1]}">${ICON_FOLDER}<span class="fn">${esc(name)}</span><span class="cnt">${count}</span></button>`;
+                };
+                const none = notes.filter(n => !memoDb.folders.some(f => f.id === n.folder)).length;
+                list.innerHTML = memoDb.folders.map((f, i) => row(f.id, f.name, notes.filter(n => n.folder === f.id).length, i)).join("") + row("none", "폴더 없음", none, memoDb.folders.length) + '<button id="addFolder">+ 새 폴더</button>' + `<button class="fd" data-folder="${ARCHIVE}" style="--fb:#e6e9ed;--fl:#b7c0ca">${ICON_ARCHIVE}<span class="fn">${ARCHIVE_NAME}</span><span class="cnt">${archived.length}</span></button>`;
+                return;
+            }
+            const shown = openFolder === ARCHIVE ? archived : !inFolder ? notes : notes.filter(n => openFolder === "none" ? !memoDb.folders.some(f => f.id === n.folder) : n.folder === openFolder);
+            list.className = inFolder ? "grid" : memoPrefs.view;
+            list.innerHTML = shown.length ? sortedNotes(shown).map(noteCard).join("") : `<div class="memoEmpty">${openFolder === ARCHIVE ? "저장소가 비어 있습니다.<br>메모의 점 3개 메뉴에서 [저장소 보관]을 누르세요." : "메모가 없습니다.<br>아래 + 버튼으로 새 메모를 쓰세요."}</div>`;
+        }
+        function okFolderName(name) {
+            if (!name || !name.trim()) return false;
+            if (name.trim() === ARCHIVE_NAME) {
+                toast("저장소는 이미 있는 폴더 이름입니다");
+                return false;
+            }
+            return true;
+        }
+        const leaveFolder = () => {
+            openFolder = null;
+            renderMemos();
+        };
+        $("#memoBack").addEventListener("click", leaveFolder);
+        $("#memoList").addEventListener("click", async e => {
+            const c = e.target.closest(".nc");
+            if (c) return openNote(c.dataset.id);
+            const f = e.target.closest(".fd");
+            if (f) {
+                openFolder = f.dataset.folder;
+                return renderMemos();
+            }
+            if (e.target.id === "addFolder") {
+                const name = await askInput("새 폴더 이름", {
+                    ph: "폴더 이름",
+                    max: 20
+                });
+                if (okFolderName(name)) {
+                    memoDb.folders.push({
+                        id: newNoteId(),
+                        name: name.trim(),
+                        c: Date.now(),
+                        u: Date.now()
+                    });
+                    saveMemos();
+                    renderMemos();
+                }
+            }
+        });
+        $("#folderRename").addEventListener("click", async () => {
+            const f = memoDb.folders.find(x => x.id === openFolder);
+            if (!f) return;
+            const name = await askInput("폴더 이름 변경", {
+                ph: "폴더 이름",
+                max: 20,
+                value: f.name
+            });
+            if (okFolderName(name)) {
+                f.name = name.trim();
+                touch(f);
+                saveMemos();
+                renderMemos();
+            }
+        });
+        $("#folderDelete").addEventListener("click", async () => {
+            const f = memoDb.folders.find(x => x.id === openFolder);
+            if (!f) return;
+            if (!await confirmBox(`"${f.name}" 폴더를 삭제할까요?`, '폴더만 사라지고, 안에 있던 메모는 "폴더 없음"으로 옮겨집니다.')) return;
+            memoDb.notes.forEach(n => {
+                if (n.folder === f.id) {
+                    n.folder = "";
+                    touch(n);
+                }
+            });
+            memoDb.folders = memoDb.folders.filter(x => x.id !== f.id);
+            memoDb.del[f.id] = Date.now();
+            saveMemos();
+            leaveFolder();
+        });
+        $("#noteFab").addEventListener("click", newNote);
+        $("#colorChip").addEventListener("click", () => {
+            memoPrefs.color = null;
+            savePrefs();
+            renderMemos();
+        });
+        let vsTab = "color";
+        function openViewSheet(t) {
+            vsTab = t;
+            renderViewSheet();
+            $("#vsBg").hidden = false;
+        }
+        const closeViewSheet = () => {
+            $("#vsBg").hidden = true;
+        };
+        function renderViewSheet() {
+            document.querySelectorAll(".vsTabs button").forEach(b => b.classList.toggle("on", b.dataset.vt === vsTab));
+            const row = (attr, v, label, icon, on) => `<button class="vsRow${on ? " on" : ""}" ${attr}="${v}"><svg viewBox="0 0 24 24">${icon}</svg>${label}</button>`;
+            $("#vsBody").innerHTML = vsTab === "color" ? `<div class="csGrid"><button class="cs all${memoPrefs.color ? "" : " on"}" data-color="" aria-label="모든 색상"></button>${NOTE_COLORS.map(c => `<button class="cs${memoPrefs.color === c.k ? " on" : ""}" data-color="${c.k}" style="background:${c.sw}" aria-label="${c.n}"></button>`).join("")}</div>` : vsTab === "sort" ? Object.keys(SORTS).map(k => row("data-sort", k, SORTS[k], SORT_ICONS[k], memoPrefs.sort === k)).join("") : Object.keys(VIEWS).map(k => row("data-view", k, VIEWS[k], VIEW_ICONS[k], memoPrefs.view === k)).join("");
+        }
+        document.querySelectorAll(".colorBtn").forEach(b => b.addEventListener("click", () => openViewSheet("sort")));
+        document.querySelectorAll(".vsTabs button").forEach(b => b.addEventListener("click", () => {
+            vsTab = b.dataset.vt;
+            renderViewSheet();
+        }));
+        $("#vsBg").addEventListener("click", e => {
+            if (e.target === $("#vsBg")) closeViewSheet();
+        });
+        $("#vsBody").addEventListener("click", e => {
+            const c = e.target.closest("[data-color]"), s = e.target.closest("[data-sort]"), v = e.target.closest("[data-view]");
+            if (c) memoPrefs.color = c.dataset.color || null; else if (s) memoPrefs.sort = s.dataset.sort; else if (v) {
+                memoPrefs.view = v.dataset.view;
+                openFolder = null;
+            } else return;
+            savePrefs();
+            closeViewSheet();
+            renderMemos();
+        });
+        function askInput(title, o) {
+            o = o || {};
+            return new Promise(resolve => {
+                const inp = $("#inputValue");
+                $("#inputTitle").textContent = title;
+                $("#inputHint").textContent = o.hint || "";
+                inp.type = o.secret ? "password" : "text";
+                inp.inputMode = o.secret ? "numeric" : "text";
+                inp.maxLength = o.max || 30;
+                inp.placeholder = o.ph || "";
+                inp.value = o.value || "";
+                $("#inputBg").hidden = false;
+                inp.focus();
+                const done = v => {
+                    $("#inputBg").hidden = true;
+                    $("#inputYes").onclick = $("#inputNo").onclick = inp.onkeydown = null;
+                    resolve(v);
+                };
+                $("#inputYes").onclick = () => done(inp.value);
+                $("#inputNo").onclick = () => done(null);
+                inp.onkeydown = e => {
+                    if (e.key === "Enter") done(inp.value);
+                };
+            });
+        }
+        let curNote = null, curIsNew = false, noteEditing = false, noteDraft = {};
+        let noteKey = null;
+        const LOCK_CHECK = "deskcal-lock";
+        const toB64 = u8 => {
+            let s = "";
+            for (let i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]);
+            return btoa(s);
+        };
+        const fromB64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+        async function pinToKey(pin, salt) {
+            const base = await crypto.subtle.importKey("raw", (new TextEncoder).encode(pin), "PBKDF2", false, [ "deriveKey" ]);
+            return crypto.subtle.deriveKey({
+                name: "PBKDF2",
+                salt: fromB64(salt),
+                iterations: 31e4,
+                hash: "SHA-256"
+            }, base, {
+                name: "AES-GCM",
+                length: 256
+            }, false, [ "encrypt", "decrypt" ]);
+        }
+        async function aesSeal(key, text) {
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const ct = new Uint8Array(await crypto.subtle.encrypt({
+                name: "AES-GCM",
+                iv: iv
+            }, key, (new TextEncoder).encode(text)));
+            return {
+                iv: toB64(iv),
+                ct: toB64(ct)
+            };
+        }
+        async function aesOpen(key, box) {
+            return (new TextDecoder).decode(await crypto.subtle.decrypt({
+                name: "AES-GCM",
+                iv: fromB64(box.iv)
+            }, key, fromB64(box.ct)));
+        }
+        async function askKey(title) {
+            const v = await askInput(title, {
+                secret: true,
+                max: 4,
+                ph: "비밀번호 4자리"
+            });
+            if (v == null) return null;
+            try {
+                const k = await pinToKey(v, memoDb.lock.salt);
+                if (await aesOpen(k, memoDb.lock.check) === LOCK_CHECK) return k;
+            } catch (e) {}
+            toast("비밀번호가 맞지 않습니다");
+            return null;
+        }
+        async function makePin() {
+            const a = await askInput("잠금 비밀번호 만들기", {
+                secret: true,
+                max: 4,
+                ph: "숫자 4자리",
+                hint: "잊어버리면 잠긴 메모를 되살릴 수 없습니다."
+            });
+            if (a == null) return null;
+            if (!/^\d{4}$/.test(a)) {
+                toast("숫자 4자리로 입력하세요");
+                return null;
+            }
+            const b = await askInput("한 번 더 입력하세요", {
+                secret: true,
+                max: 4,
+                ph: "숫자 4자리"
+            });
+            if (b !== a) {
+                if (b != null) toast("두 번 입력한 값이 다릅니다");
+                return null;
+            }
+            const salt = toB64(crypto.getRandomValues(new Uint8Array(16)));
+            const k = await pinToKey(a, salt);
+            memoDb.lock = {
+                salt: salt,
+                check: await aesSeal(k, LOCK_CHECK),
+                u: Date.now()
+            };
+            return k;
+        }
+        let sealChain = Promise.resolve();
+        function sealNote(n) {
+            const key = noteKey, text = n.body || "";
+            if (!key) return;
+            sealChain = sealChain.then(async () => {
+                n.enc = await aesSeal(key, text);
+                saveMemos();
+            }).catch(() => toast("암호화하지 못했습니다"));
+        }
+        const URL_RE = /(?<![@\w.\/])((?:https?:\/\/|www\.)[^\s<]+|[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|net|org|kr|io|me|co)(?![a-z0-9-])(?:\/[^\s<]*)?)/gi;
+        function linkifyEl(root) {
+            const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), nodes = [];
+            while (w.nextNode()) nodes.push(w.currentNode);
+            nodes.forEach(node => {
+                const s = node.nodeValue, ms = [ ...s.matchAll(URL_RE) ];
+                if (!ms.length) return;
+                const f = document.createDocumentFragment();
+                let at = 0;
+                ms.forEach(m => {
+                    const trail = (m[0].match(/[.,)\]]+$/) || [ "" ])[0];
+                    const u = m[0].slice(0, m[0].length - trail.length);
+                    const a = document.createElement("a");
+                    a.href = /^https?:/i.test(u) ? u : "https://" + u;
+                    a.target = "_blank";
+                    a.rel = "noopener noreferrer";
+                    a.textContent = u;
+                    f.append(s.slice(at, m.index), a);
+                    at = m.index + u.length;
+                });
+                f.append(s.slice(at));
+                node.replaceWith(f);
+            });
+        }
+        const ampm = d => {
+            const h = d.getHours();
+            return `${h < 12 ? "오전" : "오후"} ${h % 12 || 12}:${pad(d.getMinutes())}`;
+        };
+        const fmtFull = t => {
+            const d = new Date(t);
+            return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${ampm(d)}`;
+        };
+        const fmtTime2 = t => {
+            const d = new Date(t);
+            return `${String(d.getFullYear()).slice(2)}/${d.getMonth() + 1}/${d.getDate()} ${ampm(d)}`;
+        };
+        function timeAgo(t) {
+            const s = Math.max(0, Math.floor((Date.now() - t) / 1e3));
+            if (s < 60) return `${s}초 전`;
+            if (s < 3600) return `${Math.floor(s / 60)}분 전`;
+            if (s < 86400) return `${Math.floor(s / 3600)}시간 전`;
+            if (s < 86400 * 30) return `${Math.floor(s / 86400)}일 전`;
+            if (s < 86400 * 365) return `${Math.floor(s / (86400 * 30))}달 전`;
+            return `${Math.floor(s / (86400 * 365))}년 전`;
+        }
+        function paintNote() {
+            const c = colorOf(noteDraft.color), v = $("#noteView");
+            v.style.setProperty("--nbar", c.sw);
+            v.style.setProperty("--nbg", c.bg);
+            v.style.setProperty("--nline", c.line);
+            v.style.setProperty("--nfg", c.fg || "#1d2433");
+            $("#noteColorBtn").style.background = c.sw;
+            $("#noteTitle").textContent = noteParts(curNote).title || "(제목 없음)";
+            $("#noteLockItem").textContent = curNote.locked ? "잠금 해제" : "잠금";
+            $("#noteArchiveItem").textContent = curNote.archived ? "저장소에서 복원" : "저장소 보관";
+            $("#noteSaveItem").hidden = !!curNote.archived;
+            $("#noteDeleteItem").hidden = !!curNote.archived;
+            $("#noteEditBtn").hidden = noteEditing || !!curNote.archived;
+            $("#noteC").textContent = noteEditing ? "편집중" : timeAgo(curNote.m);
+            $("#noteM").textContent = fmtTime2(curNote.m);
+            $("#noteFolderName").textContent = folderName(noteDraft.folder) || "폴더 없음";
+        }
+        setInterval(() => {
+            if (curNote && !noteEditing) $("#noteC").textContent = timeAgo(curNote.m);
+        }, 1e3);
+        function renderRead() {
+            const r = $("#noteRead");
+            r.innerHTML = sanitize(curNote.body || "");
+            linkifyEl(r);
+        }
+        function noteHtml() {
+            const c = $("#noteEdit").cloneNode(true);
+            c.querySelectorAll("div,p").forEach(d => {
+                const prev = d.previousSibling;
+                if (prev && !/^(DIV|P|BR)$/.test(prev.nodeName)) d.before(document.createElement("br"));
+                if (d.childNodes.length === 1 && d.firstChild.nodeName === "BR") d.firstChild.remove();
+            });
+            return sanitize(c.innerHTML);
+        }
+        const draftEmpty = () => !$("#noteTitleInput").value.trim() && !plainBody(noteHtml()).trim();
+        function setNoteEdit(on, pt) {
+            const oldTop = $("#noteScroll").getBoundingClientRect().top, oldScroll = $("#noteScroll").scrollTop;
+            noteEditing = on;
+            $("#noteBack").innerHTML = on ? ICON_CHECK : ICON_BACK;
+            $("#noteBack").setAttribute("aria-label", on ? "입력 완료" : "뒤로");
+            $("#noteTitle").hidden = on;
+            $("#noteEditBtn").hidden = on;
+            $("#noteTitleInput").hidden = !on;
+            $("#noteColorBtn").hidden = !on;
+            $("#noteFmtBtn").hidden = !on;
+            $("#noteOpts").hidden = !on;
+            $("#noteScroll").hidden = on;
+            $("#noteEdit").hidden = !on;
+            $("#noteUndoBar").hidden = !on;
+            $("#noteC").disabled = on;
+            $("#timePop").hidden = true;
+            if (on) {
+                const ed = $("#noteEdit");
+                ed.innerHTML = sanitize(curNote.body || "");
+                $("#noteTitleInput").value = curNote.title || "";
+                closeFind();
+                let placed = false;
+                if (pt && document.caretRangeFromPoint) {
+                    ed.scrollTop = oldScroll;
+                    const r = document.caretRangeFromPoint(pt.x, pt.y + ed.getBoundingClientRect().top - oldTop);
+                    if (r && ed.contains(r.startContainer)) {
+                        ed.focus({
+                            preventScroll: true
+                        });
+                        const s = getSelection();
+                        s.removeAllRanges();
+                        s.addRange(r);
+                        placed = true;
+                    }
+                }
+                if (!placed) focusEnd(ed);
+                resetNoteHistory();
+            } else renderRead();
+            paintNote();
+        }
+        function showNote(n, isNew) {
+            curNote = n;
+            curIsNew = isNew;
+            noteDraft = {
+                color: n.color,
+                folder: memoDb.folders.some(f => f.id === n.folder) ? n.folder : ""
+            };
+            if ($("#noteView").hidden) pushLayer();
+            $("#noteView").hidden = false;
+            $("#noteMenu").hidden = true;
+            closeFind();
+            setNoteEdit(isNew);
+        }
+        function newNote() {
+            const t = Date.now();
+            const folder = openFolder && openFolder !== "none" ? openFolder : "";
+            showNote({
+                id: newNoteId(),
+                title: "",
+                body: "",
+                color: memoPrefs.color || "yellow",
+                folder: folder,
+                locked: false,
+                c: t,
+                m: t,
+                u: t
+            }, true);
+        }
+        async function openNote(id) {
+            const n = memoDb.notes.find(x => x.id === id);
+            if (!n) return;
+            if (n.locked) {
+                const key = await askKey("잠긴 메모입니다");
+                if (!key) return;
+                n.body = await aesOpen(key, n.enc);
+                noteKey = key;
+            }
+            showNote(n, false);
+        }
+        function commitNote() {
+            if (!curNote) return false;
+            const n = curNote;
+            if (curIsNew && (!noteEditing || draftEmpty())) return false;
+            const body = noteEditing ? noteHtml() : n.body;
+            const title = noteEditing ? $("#noteTitleInput").value.trim() : n.title;
+            const changed = body !== n.body || title !== n.title || noteDraft.color !== n.color || noteDraft.folder !== n.folder;
+            if (!changed && !curIsNew) return false;
+            n.body = body;
+            n.title = title;
+            n.color = noteDraft.color;
+            n.folder = noteDraft.folder;
+            n.m = Date.now();
+            touch(n);
+            if (curIsNew) {
+                memoDb.notes.push(n);
+                curIsNew = false;
+            }
+            if (n.locked) sealNote(n);
+            saveMemos();
+            return true;
+        }
+        function hideNote(skipSave) {
+            const saved = skipSave !== true && commitNote();
+            if (curNote && curNote.locked) curNote.body = "";
+            noteKey = null;
+            curNote = null;
+            noteEditing = false;
+            $("#noteView").hidden = true;
+            if (tab === "memo") renderMemos();
+            if (tab === "search") renderSearch();
+            if (saved) toast("자동 저장됨");
+        }
+        const closeNote = () => goBack(hideNote);
+        function doneEdit() {
+            if (curIsNew && draftEmpty()) return closeNote();
+            if (commitNote()) toast("저장됨");
+            setNoteEdit(false);
+        }
+        $("#noteBack").addEventListener("click", () => {
+            if (noteEditing) doneEdit(); else closeNote();
+        });
+        $("#noteEditBtn").innerHTML = ICON_PEN;
+        $("#noteEditBtn").addEventListener("click", () => setNoteEdit(true));
+        let lastTap = 0;
+        $("#noteScroll").addEventListener("click", e => {
+            if (e.target.closest("a") || curNote.archived) return;
+            const t = Date.now();
+            if (t - lastTap < 350) {
+                lastTap = 0;
+                setNoteEdit(true, {
+                    x: e.clientX,
+                    y: e.clientY
+                });
+            } else lastTap = t;
+        });
+        $("#noteC").addEventListener("click", e => {
+            e.stopPropagation();
+            $("#timeCreated").textContent = fmtFull(curNote.c);
+            $("#timeModified").textContent = fmtFull(curNote.m);
+            $("#timePop").hidden = !$("#timePop").hidden;
+        });
+        document.addEventListener("click", () => {
+            $("#timePop").hidden = true;
+        });
+        $("#noteColorBtn").addEventListener("click", () => {
+            $("#noteColorGrid").innerHTML = NOTE_COLORS.map(c => `<button class="cs${noteDraft.color === c.k ? " on" : ""}" data-c="${c.k}" style="background:${c.sw}" aria-label="${c.n}"></button>`).join("");
+            $("#noteColorBg").hidden = false;
+        });
+        $("#noteColorBg").addEventListener("click", e => {
+            const b = e.target.closest("[data-c]");
+            if (b) {
+                noteDraft.color = b.dataset.c;
+                paintNote();
+                noteRecord(false);
+            }
+            if (b || e.target === $("#noteColorBg")) $("#noteColorBg").hidden = true;
+        });
+        function renderFolderPick() {
+            const row = (id, name) => `<button class="vsRow${noteDraft.folder === id ? " on" : ""}" data-f="${id}">${ICON_FOLDER}${esc(name)}</button>`;
+            $("#folderPickList").innerHTML = row("", "폴더 없음") + memoDb.folders.map(f => row(f.id, f.name)).join("") + '<button class="vsRow" id="folderPickAdd">+ 새 폴더</button>';
+        }
+        $("#noteFolderBtn").addEventListener("click", () => {
+            renderFolderPick();
+            $("#folderPick").hidden = false;
+        });
+        $("#folderPick").addEventListener("click", async e => {
+            const b = e.target.closest("[data-f]");
+            if (b) {
+                noteDraft.folder = b.dataset.f;
+                paintNote();
+                noteRecord(false);
+                $("#folderPick").hidden = true;
+                return;
+            }
+            if (e.target.closest("#folderPickAdd")) {
+                const name = await askInput("새 폴더 이름", {
+                    ph: "폴더 이름",
+                    max: 20
+                });
+                if (okFolderName(name)) {
+                    const f = {
+                        id: newNoteId(),
+                        name: name.trim(),
+                        c: Date.now(),
+                        u: Date.now()
+                    };
+                    memoDb.folders.push(f);
+                    saveMemos();
+                    noteDraft.folder = f.id;
+                    paintNote();
+                    noteRecord(false);
+                    $("#folderPick").hidden = true;
+                }
+                return;
+            }
+            if (e.target === $("#folderPick")) $("#folderPick").hidden = true;
+        });
+        let noteHist = [], noteHistAt = 0, lastTypeAt = 0;
+        function caretOff(ed) {
+            const s = getSelection();
+            if (!s.rangeCount || !ed.contains(s.focusNode)) return null;
+            const r = s.getRangeAt(0).cloneRange();
+            r.setStart(ed, 0);
+            const f = r.cloneContents();
+            return f.textContent.length + f.querySelectorAll("br").length;
+        }
+        function setCaret(ed, off) {
+            if (off == null) return;
+            ed.focus({
+                preventScroll: true
+            });
+            const w = document.createTreeWalker(ed, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+            const r = document.createRange();
+            let left = off, placed = false;
+            while (!placed && w.nextNode()) {
+                const n = w.currentNode;
+                if (n.nodeType === 3) {
+                    if (left <= n.length) {
+                        r.setStart(n, left);
+                        placed = true;
+                    } else left -= n.length;
+                } else if (n.nodeName === "BR") {
+                    if (left === 0) {
+                        r.setStartBefore(n);
+                        placed = true;
+                    } else left -= 1;
+                }
+            }
+            if (!placed) r.selectNodeContents(ed);
+            r.collapse(placed);
+            const s = getSelection();
+            s.removeAllRanges();
+            s.addRange(r);
+        }
+        const noteState = () => ({
+            h: $("#noteEdit").innerHTML,
+            t: $("#noteTitleInput").value,
+            color: noteDraft.color,
+            folder: noteDraft.folder,
+            caret: caretOff($("#noteEdit"))
+        });
+        const sameState = (a, b) => a.h === b.h && a.t === b.t && a.color === b.color && a.folder === b.folder;
+        function paintUndo() {
+            $("#noteUndo").disabled = noteHistAt <= 0;
+            $("#noteRedo").disabled = noteHistAt >= noteHist.length - 1;
+        }
+        function resetNoteHistory() {
+            noteHist = [ noteState() ];
+            noteHistAt = 0;
+            lastTypeAt = 0;
+            paintUndo();
+        }
+        function noteRecord(typing) {
+            if (!curNote || !noteEditing) return;
+            const st = noteState(), now = Date.now();
+            if (sameState(st, noteHist[noteHistAt])) {
+                noteHist[noteHistAt].caret = st.caret;
+                return;
+            }
+            if (typing && lastTypeAt && now - lastTypeAt < 700) noteHist[noteHistAt] = st; else {
+                noteHist.length = noteHistAt + 1;
+                noteHist.push(st);
+                noteHistAt++;
+                if (noteHist.length > 200) {
+                    noteHist.shift();
+                    noteHistAt--;
+                }
+            }
+            lastTypeAt = typing ? now : 0;
+            paintUndo();
+        }
+        function noteGo(d) {
+            const next = noteHistAt + d;
+            if (next < 0 || next >= noteHist.length) return;
+            noteHistAt = next;
+            lastTypeAt = 0;
+            const st = noteHist[next];
+            $("#noteEdit").innerHTML = st.h;
+            $("#noteTitleInput").value = st.t;
+            noteDraft.color = st.color;
+            noteDraft.folder = st.folder;
+            lastRange = null;
+            paintNote();
+            setCaret($("#noteEdit"), st.caret);
+            paintUndo();
+        }
+        [ "#noteUndo", "#noteRedo" ].forEach(x => keepFocus($(x)));
+        $("#noteUndo").addEventListener("click", () => noteGo(-1));
+        $("#noteRedo").addEventListener("click", () => noteGo(1));
+        $("#noteEdit").addEventListener("input", e => noteRecord(!(e.data === " " || e.inputType === "insertParagraph" || e.inputType === "insertLineBreak")));
+        $("#noteTitleInput").addEventListener("input", () => noteRecord(true));
+        if (window.visualViewport) {
+            const fitNote = () => {
+                $("#noteView").style.bottom = Math.max(0, Math.round(window.innerHeight - visualViewport.height - visualViewport.offsetTop)) + "px";
+            };
+            visualViewport.addEventListener("resize", fitNote);
+            visualViewport.addEventListener("scroll", fitNote);
+        }
+        function openFmt() {
+            const inNote = !!(curNote && noteEditing);
+            $("#fmtHint").textContent = inNote ? "글자를 길게 눌러 선택한 뒤 고르세요." : "단어를 길게 눌러 선택하면 그 단어만, 선택하지 않으면 줄 전체가 바뀝니다.";
+            $("#palette").hidden = false;
+            $("#fmtBg").hidden = false;
+        }
+        function closeFmt() {
+            if ($("#palette").hidden) return;
+            $("#palette").hidden = true;
+            $("#fmtBg").hidden = true;
+            if (curNote && noteEditing) commitNote(); else if (dayKey) saveDay(true);
+            toast("저장됨");
+        }
+        keepFocus($("#noteFmtBtn"));
+        $("#noteFmtBtn").addEventListener("click", openFmt);
+        $("#fmtBg").addEventListener("click", closeFmt);
+        $("#fmtClose").addEventListener("click", closeFmt);
+        $("#noteMoreBtn").addEventListener("click", e => {
+            e.stopPropagation();
+            $("#noteMenu").hidden = !$("#noteMenu").hidden;
+        });
+        document.addEventListener("click", e => {
+            if (!$("#noteMenu").hidden && !e.target.closest("#noteMenu")) $("#noteMenu").hidden = true;
+        });
+        $("#noteMenu").addEventListener("click", async e => {
+            const b = e.target.closest("[data-act]");
+            if (!b) return;
+            $("#noteMenu").hidden = true;
+            const act = b.dataset.act;
+            if (act === "find") {
+                if (noteEditing) {
+                    commitNote();
+                    setNoteEdit(false);
+                }
+                $("#findBar").hidden = false;
+                $("#findInput").value = "";
+                $("#findCount").textContent = "0/0";
+                $("#findInput").focus();
+            } else if (act === "save") {
+                if (curIsNew && draftEmpty()) return toast("내용을 입력하세요");
+                commitNote();
+                if (noteEditing) setNoteEdit(false);
+                toast("저장됨");
+            } else if (act === "lock") {
+                if (curIsNew && draftEmpty()) return toast("내용을 입력한 뒤 잠글 수 있습니다");
+                commitNote();
+                if (!curNote.locked) {
+                    const key = noteKey || (memoDb.lock ? await askKey("잠금 비밀번호를 입력하세요") : await makePin());
+                    if (!key) return;
+                    noteKey = key;
+                    if (!curNote.title) curNote.title = noteParts(curNote).title;
+                    curNote.enc = await aesSeal(key, curNote.body || "");
+                    curNote.locked = true;
+                } else {
+                    curNote.locked = false;
+                    delete curNote.enc;
+                }
+                touch(curNote);
+                saveMemos();
+                paintNote();
+                toast(curNote.locked ? "잠갔습니다" : "잠금을 풀었습니다");
+            } else if (act === "archive") {
+                if (curNote.archived) {
+                    delete curNote.archived;
+                    touch(curNote);
+                    saveMemos();
+                    goBack(() => hideNote(true));
+                    return toast("저장소에서 복원했습니다");
+                }
+                if (curIsNew && draftEmpty()) return toast("내용을 입력한 뒤 보관할 수 있습니다");
+                commitNote();
+                if (noteEditing) setNoteEdit(false);
+                curNote.archived = Date.now();
+                touch(curNote);
+                saveMemos();
+                goBack(() => hideNote(true));
+                toast("저장소로 옮겼습니다");
+            } else if (act === "delete") {
+                if (curIsNew) return closeNote();
+                if (!await confirmBox("정말 삭제하겠습니까?", "삭제한 메모는 휴지통에 30일 동안 보관된 뒤 완전히 삭제됩니다.")) return;
+                commitNote();
+                curNote.trashed = Date.now();
+                touch(curNote);
+                saveMemos();
+                goBack(() => hideNote(true));
+                toast("휴지통으로 옮겼습니다");
+            }
+        });
+        let findMarks = [], findIdx = -1;
+        function closeFind() {
+            $("#findBar").hidden = true;
+            findMarks = [];
+            findIdx = -1;
+            if (curNote && !noteEditing) renderRead();
+        }
+        function moveFind(d) {
+            if (!findMarks.length) return;
+            if (findMarks[findIdx]) findMarks[findIdx].classList.remove("cur");
+            findIdx = (findIdx + d + findMarks.length) % findMarks.length;
+            findMarks[findIdx].classList.add("cur");
+            findMarks[findIdx].scrollIntoView({
+                block: "center"
+            });
+            $("#findCount").textContent = `${findIdx + 1}/${findMarks.length}`;
+        }
+        function doFind() {
+            renderRead();
+            findMarks = [];
+            findIdx = -1;
+            const q = $("#findInput").value.toLowerCase();
+            if (q) {
+                const w = document.createTreeWalker($("#noteRead"), NodeFilter.SHOW_TEXT), nodes = [];
+                while (w.nextNode()) nodes.push(w.currentNode);
+                nodes.forEach(node => {
+                    const s = node.nodeValue, low = s.toLowerCase();
+                    if (low.indexOf(q) < 0) return;
+                    const f = document.createDocumentFragment();
+                    let at = 0, i;
+                    while ((i = low.indexOf(q, at)) >= 0) {
+                        f.append(s.slice(at, i));
+                        const m = document.createElement("mark");
+                        m.textContent = s.slice(i, i + q.length);
+                        f.append(m);
+                        findMarks.push(m);
+                        at = i + q.length;
+                    }
+                    f.append(s.slice(at));
+                    node.replaceWith(f);
+                });
+            }
+            $("#findCount").textContent = "0/" + findMarks.length;
+            moveFind(1);
+        }
+        $("#findInput").addEventListener("input", doFind);
+        $("#findPrev").addEventListener("click", () => moveFind(-1));
+        $("#findNext").addEventListener("click", () => moveFind(1));
+        $("#findClose").addEventListener("click", closeFind);
+        const plain = h => {
+            const d = document.createElement("div");
+            d.innerHTML = sanitize(h || "");
+            return d.textContent;
+        };
+        function markHit(text, q) {
+            const i = text.toLowerCase().indexOf(q);
+            if (i < 0) return esc(text);
+            const start = Math.max(0, i - 8);
+            return (start ? "…" : "") + esc(text.slice(start, i)) + "<mark>" + esc(text.slice(i, i + q.length)) + "</mark>" + esc(text.slice(i + q.length));
+        }
+        function renderSearch() {
+            const box = $("#searchResult");
+            const q = $("#searchInput").value.trim().toLowerCase();
+            const where = areaScope === "memo" ? "메모" : "달력 일정";
+            $("#searchInput").placeholder = `${where}에서 검색`;
+            if (!q) {
+                box.innerHTML = `<div class="srEmpty">${where}에서 찾을 단어를 입력하세요.</div>`;
+                return;
+            }
+            let html = "";
+            if (areaScope === "cal") {
+                Object.keys(data.days).sort().reverse().forEach(k => {
+                    ((data.days[k] || {}).items || []).forEach(it => {
+                        const t = plain(it.h);
+                        if (t.toLowerCase().includes(q)) {
+                            const [y, m, d] = k.split("-").map(Number);
+                            html += `<button class="sr" data-day="${k}"><small>${y}년 ${m}월 ${d}일 ${DOWS[new Date(y, m - 1, d).getDay()]}요일</small><div>${markHit(t, q)}</div></button>`;
+                        }
+                    });
+                });
+            } else {
+                const textOf = n => n.locked ? noteParts(n).title : `${n.title || ""}\n${plainBody(n.body)}`;
+                html = sortedNotes(liveNotes().filter(n => textOf(n).toLowerCase().includes(q))).map(n => {
+                    const line = textOf(n).split("\n").find(l => l.toLowerCase().includes(q)) || "";
+                    return `<button class="sr" data-note="${n.id}"><small><i style="background:${colorOf(n.color).sw}"></i>${esc(noteParts(n).title)}</small><div>${markHit(line, q)}</div></button>`;
+                }).join("");
+            }
+            box.innerHTML = html || '<div class="srEmpty">찾는 내용이 없습니다.</div>';
+        }
+        $("#searchInput").addEventListener("input", renderSearch);
+        $("#searchResult").addEventListener("click", e => {
+            const d = e.target.closest("[data-day]"), n = e.target.closest("[data-note]");
+            if (d) openDay(d.dataset.day);
+            if (n) openNote(n.dataset.note);
+        });
+        function showBackupInfo() {
+            $("#trashBtn").textContent = `메모 휴지통 (${memoDb.notes.filter(n => n.trashed).length})`;
+        }
+        const backupSave = kind => server.call("backupSave", {
+            user: userId,
+            memos: memoForStore(),
+            kind: kind
+        });
+        const pointInfo = (b, area) => `${b.kind === "before" ? "복원 직전" : "자동 저장"} · ${area === "memo" ? `메모 ${b.notes}개` : `일정 ${b.days}일`}`;
+        function paintSettings() {
+            const memo = areaScope === "memo";
+            $("#restoreBtn").textContent = memo ? "메모 복원" : "달력 복원";
+            $("#restoreDesc").textContent = memo ? "복원 시점은 바뀐 내용이 있을 때 최대 3시간에 한 번 자동으로 만들어져 30일 동안 보관됩니다. 메모 복원은 메모만 되돌리고 일정은 그대로 둡니다." : "복원 시점은 바뀐 내용이 있을 때 최대 3시간에 한 번 자동으로 만들어져 30일 동안 보관됩니다. 달력 복원은 일정만 되돌리고 메모는 그대로 둡니다.";
+            $("#archiveBtn").hidden = !memo;
+            $("#archiveBtn").textContent = `메모 저장소 (${liveNotes().filter(n => n.archived).length})`;
+            $("#trashCard").hidden = !memo;
+        }
+        $("#archiveBtn").addEventListener("click", () => {
+            openFolder = ARCHIVE;
+            showTab("memo");
+            renderMemos();
+        });
+        const POINT_GAP_MS = 3 * 36e5;
+        let pointBusy = false;
+        function contentSig() {
+            const s = JSON.stringify([ data.days, memoForStore() ]);
+            let h = 5381;
+            for (let i = 0; i < s.length; i++) h = (h * 33 ^ s.charCodeAt(i)) >>> 0;
+            return h.toString(36) + s.length;
+        }
+        async function autoPoint() {
+            if (pointBusy || !userId) return;
+            if (Date.now() - LS.get("dc_point_at_" + userId, 0) < POINT_GAP_MS) return;
+            const sig = contentSig();
+            if (sig === LS.get("dc_point_sig_" + userId, "")) return;
+            pointBusy = true;
+            try {
+                await backupSave("auto");
+                LS.set("dc_point_at_" + userId, Date.now());
+                LS.set("dc_point_sig_" + userId, sig);
+            } catch (e) {}
+            pointBusy = false;
+        }
+        async function restorePoint(id, area) {
+            await sync();
+            await backupSave("before");
+            const r = await server.call("backupRestore", {
+                user: userId,
+                id: id,
+                area: area
+            });
+            if (area === "memo") {
+                memoDb = r.memos;
+                saveMemos();
+                renderMemos();
+                toast("메모를 복원했습니다");
+            } else {
+                data.days = r.days;
+                saveData();
+                renderPages();
+                toast("달력 일정을 복원했습니다");
+            }
+            showBackupInfo();
+            paintSettings();
+        }
+        let restorePick = "";
+        $("#restoreBtn").addEventListener("click", async () => {
+            try {
+                const {backups: backups} = await server.call("backupList", {
+                    user: userId
+                });
+                restorePick = "";
+                $("#restoreText").textContent = areaScope === "memo" ? "복원할 시점을 고르세요. 지금 메모가 그 시점의 내용으로 바뀌고, 바뀌기 직전 상태는 따로 남겨 둡니다." : "복원할 시점을 고르세요. 지금 일정이 그 시점의 내용으로 바뀌고, 바뀌기 직전 상태는 따로 남겨 둡니다.";
+                $("#restoreYes").disabled = true;
+                $("#restoreList").innerHTML = backups.length ? backups.map(b => `<button class="rp" data-rp="${b.id}"><b>${new Date(b.at).toLocaleString("ko-KR")}</b><span>${pointInfo(b, areaScope)}</span></button>`).join("") : '<p class="small muted">복원할 수 있는 시점이 없습니다.</p>';
+                $("#restoreBg").hidden = false;
+            } catch (e) {
+                toast("복원 시점을 불러오지 못했습니다. 인터넷 연결을 확인하세요");
+            }
+        });
+        $("#restoreList").addEventListener("click", e => {
+            const b = e.target.closest("[data-rp]");
+            if (!b) return;
+            restorePick = b.dataset.rp;
+            document.querySelectorAll(".rp").forEach(x => x.classList.toggle("on", x === b));
+            $("#restoreYes").disabled = false;
+        });
+        $("#restoreNo").addEventListener("click", () => {
+            $("#restoreBg").hidden = true;
+        });
+        $("#restoreBg").addEventListener("click", e => {
+            if (e.target === $("#restoreBg")) $("#restoreBg").hidden = true;
+        });
+        $("#restoreYes").addEventListener("click", async () => {
+            if (!restorePick) return;
+            $("#restoreBg").hidden = true;
+            try {
+                await restorePoint(restorePick, areaScope);
+            } catch (err) {
+                toast("복원하지 못했습니다");
+            }
+        });
+        function renderTrash() {
+            const list = memoDb.notes.filter(n => n.trashed).sort((a, b) => b.trashed - a.trashed);
+            $("#trashList").innerHTML = list.length ? list.map(n => {
+                const c = colorOf(n.color);
+                const left = Math.max(1, Math.ceil((n.trashed + TRASH_MS - Date.now()) / 864e5));
+                return `<div class="tr" style="--bar:${c.bar};--bg:${c.bg}"><div class="info"><b>${n.locked ? ICON_LOCK : ""}<em>${esc(noteParts(n).title) || "(제목 없음)"}</em></b><span>${left}일 뒤 완전히 삭제됩니다</span></div><button data-back="${n.id}">되살리기</button><button class="red" data-kill="${n.id}">완전 삭제</button></div>`;
+            }).join("") : '<div class="memoEmpty">휴지통이 비어 있습니다.</div>';
+        }
+        const hideTrash = () => {
+            $("#trashView").hidden = true;
+            showBackupInfo();
+        };
+        $("#trashBtn").addEventListener("click", () => {
+            renderTrash();
+            pushLayer();
+            $("#trashView").hidden = false;
+        });
+        $("#trashBack").addEventListener("click", () => goBack(hideTrash));
+        $("#trashList").addEventListener("click", async e => {
+            const back = e.target.closest("[data-back]"), kill = e.target.closest("[data-kill]");
+            if (back) {
+                const n = memoDb.notes.find(x => x.id === back.dataset.back);
+                delete n.trashed;
+                touch(n);
+                saveMemos();
+                renderTrash();
+                toast("메모를 되살렸습니다");
+            }
+            if (kill) {
+                if (!await confirmBox("완전히 삭제할까요?", "이 메모는 다시 되살릴 수 없습니다.")) return;
+                memoDb.notes = memoDb.notes.filter(x => x.id !== kill.dataset.kill);
+                memoDb.del[kill.dataset.kill] = Date.now();
+                saveMemos();
+                renderTrash();
+            }
+        });
         document.addEventListener("visibilitychange", () => {
             if (!document.hidden) sync();
         });
@@ -2350,10 +4257,10 @@ svg .f { fill: currentColor; stroke: none; }
                 afterUsers();
             }).catch(e => {
                 setCloud("error");
-                if (e.code === "auth") renewLogin(e.message); else if (!userId) {
+                if (e.code === "auth") renewLogin(e.message); else if (e.code === "scope") showSetup(e.message); else if (!userId) {
                     $("#picker").hidden = false;
-                    $("#pickList").innerHTML = '<p class="small muted">구글 드라이브에 연결할 수 없습니다. 인터넷 연결을 확인하세요.</p>';
-                }
+                    $("#pickList").innerHTML = `<p class="small muted">${esc(e.status ? e.message : "구글 드라이브에 연결할 수 없습니다. 인터넷 연결을 확인하세요.")}</p>`;
+                } else if (e.status) toast(e.message, 6e3);
             });
         }
         loadData();
