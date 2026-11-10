@@ -1066,6 +1066,9 @@ svg .f { fill: currentColor; stroke: none; }
     function fileUrl(p) {
         return "file:" + "/".repeat(3) + p.replace(/\\/g, "/").split("/").map(encodeURIComponent).join("/").replace(/^([A-Za-z])%3A/, "$1:");
     }
+    function doneLast(items) {
+        return items.filter(it => !it.d).concat(items.filter(it => it.d));
+    }
     function itemsHtml(items) {
         return items.map(it => `<li${it.id ? ` data-id="${String(it.id).replace(/[^\w-]/g, "")}"` : ""}${it.d ? ' class="done"' : ""}>${sanitize(it.h)}</li>`).join("");
     }
@@ -1902,7 +1905,7 @@ svg .f { fill: currentColor; stroke: none; }
     });
     (function() {
         const $ = s => document.querySelector(s);
-        const VERSION = "2.1.1";
+        const VERSION = "2.1.2";
         const LS = {
             get(k, d) {
                 try {
@@ -2213,7 +2216,7 @@ svg .f { fill: currentColor; stroke: none; }
                     const cls = [ "cell" ];
                     if (info.holiday || customHol) cls.push("hol");
                     if (info.key === tk) cls.push("today");
-                    html += `<div class="${cls.join(" ")}" data-key="${info.key}"><div class="n">${d}</div>${sub}<div class="items">${items.map(it => `<div class="it${it.d ? " done" : ""}">${sanitize(it.h).replace(/font-size:\s*([\d.]+)px/g, (m, v) => `font-size:${(v * 12 / 18).toFixed(1)}px`)}</div>`).join("")}</div></div>`;
+                    html += `<div class="${cls.join(" ")}" data-key="${info.key}"><div class="n">${d}</div>${sub}<div class="items">${doneLast(items).map(it => `<div class="it${it.d ? " done" : ""}">${sanitize(it.h).replace(/font-size:\s*([\d.]+)px/g, (m, v) => `font-size:${(v * 12 / 18).toFixed(1)}px`)}</div>`).join("")}</div></div>`;
                 }
                 html += "</div>";
             }
@@ -2338,6 +2341,14 @@ svg .f { fill: currentColor; stroke: none; }
             row.querySelector(".txt").innerHTML = sanitize(it.h || "");
             return row;
         }
+        function sinkDone() {
+            const card = $("#card");
+            card.querySelectorAll(".row.done").forEach(r => card.appendChild(r));
+        }
+        function insertRow(r, after) {
+            const card = $("#card"), firstDone = card.querySelector(".row.done");
+            if (after && !after.classList.contains("done")) after.after(r); else if (firstDone) card.insertBefore(r, firstDone); else card.appendChild(r);
+        }
         function openDay(key, focusNew) {
             dayKey = key;
             const [y, m, d] = key.split("-").map(Number);
@@ -2353,20 +2364,21 @@ svg .f { fill: currentColor; stroke: none; }
             const items = (DAY_MERGE.normalize(key, data.days[key]) || {
                 items: []
             }).items;
-            items.forEach(it => card.appendChild(rowEl(it)));
+            doneLast(items).forEach(it => card.appendChild(rowEl(it)));
             dayBase = [ ...card.querySelectorAll(".row") ].map(r => ({
                 id: r.dataset.id,
                 h: sanitize(r.querySelector(".txt").innerHTML),
                 d: r.classList.contains("done")
             }));
-            if (!items.length || focusNew) card.appendChild(rowEl({
+            let newRow = null;
+            if (!items.length || focusNew) insertRow(newRow = rowEl({
                 h: ""
             }));
             if ($("#dayView").hidden) pushLayer();
             $("#monthView").hidden = true;
             $("#dayView").hidden = false;
             $("#palette").hidden = true;
-            if (focusNew || !items.length) focusEnd(card.lastElementChild.querySelector(".txt"));
+            if (newRow) focusEnd(newRow.querySelector(".txt"));
         }
         function collect() {
             return [ ...document.querySelectorAll("#card .row") ].map(r => ({
@@ -2512,15 +2524,16 @@ svg .f { fill: currentColor; stroke: none; }
             const chk = e.target.closest(".chk");
             if (chk) {
                 chk.parentElement.classList.toggle("done");
+                sinkDone();
                 return;
             }
             if (e.target === $("#card")) {
-                const last = $("#card").lastElementChild;
+                const last = [ ...$("#card").querySelectorAll(".row:not(.done)") ].pop();
                 if (last && !last.querySelector(".txt").textContent.trim()) focusEnd(last.querySelector(".txt")); else {
                     const r = rowEl({
                         h: ""
                     });
-                    $("#card").appendChild(r);
+                    insertRow(r);
                     focusEnd(r.querySelector(".txt"));
                 }
             }
@@ -2541,7 +2554,7 @@ svg .f { fill: currentColor; stroke: none; }
                     h: ""
                 });
                 nr.querySelector(".txt").appendChild(frag);
-                row.after(nr);
+                insertRow(nr, row);
                 const t = nr.querySelector(".txt");
                 t.focus();
                 const c = document.createRange();
@@ -2571,14 +2584,17 @@ svg .f { fill: currentColor; stroke: none; }
         [ "#doneBtn", "#paletteBtn", "#addRowBtn" ].forEach(s => keepFocus($(s)));
         $("#doneBtn").addEventListener("click", () => {
             const row = currentRow() || $("#card .row");
-            if (row) row.classList.toggle("done");
+            if (!row) return;
+            row.classList.toggle("done");
+            sinkDone();
+            focusEnd(row.querySelector(".txt"));
         });
         $("#addRowBtn").addEventListener("click", () => {
             const r = rowEl({
                 h: ""
             });
             const cur = currentRow();
-            if (cur) cur.after(r); else $("#card").appendChild(r);
+            insertRow(r, cur);
             focusEnd(r.querySelector(".txt"));
         });
         $("#paletteBtn").addEventListener("click", () => {
