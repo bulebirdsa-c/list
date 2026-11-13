@@ -30,6 +30,8 @@ svg .f { fill: currentColor; stroke: none; }
   background: linear-gradient(180deg, #cdeafc 0%, #e6f5fe 100%); }
 .title { font-size: clamp(20px, 6.6vw, 27px); font-weight: 800; letter-spacing: -.3px; color: #2a2f3a; white-space: nowrap; }
 .top { padding-left: 6px !important; gap: 2px !important; }
+/* 월 달력: 맨 위 날짜와 요일 줄 사이를 좁게 */
+#monthView .top { padding-top: calc(env(safe-area-inset-top) + 10px); padding-bottom: 4px; }
 .arrow { width: 34px; height: 40px; display: grid; place-items: center; color: #2b6f99; flex: none; }
 .arrow svg { width: 22px; height: 22px; stroke-width: 2.4; }
 .top .icon { width: 38px; flex: none; }
@@ -57,7 +59,7 @@ svg .f { fill: currentColor; stroke: none; }
 #ibAct { flex: none; padding: 8px 12px; border-radius: 9px; background: #1f9fe8; color: #fff; font-weight: 600; font-size: 14px; white-space: nowrap; }
 #ibClose { flex: none; width: 30px; height: 30px; color: #8a7a4a; font-size: 15px; }
 .dow { flex: none; display: grid; grid-template-columns: repeat(7, 1fr); background: #eaf6fd; border-bottom: 1px solid #cfe7f5; }
-.dow span { text-align: center; padding: 10px 0 11px; font-size: 16px; font-weight: 500; }
+.dow span { text-align: center; padding: 5px 0 6px; font-size: 14px; font-weight: 500; }
 .dow .sun, .dow .sat { color: #9aa3ad; }
 
 #pager { flex: 1; overflow: hidden; position: relative; touch-action: pan-y; }
@@ -65,7 +67,8 @@ svg .f { fill: currentColor; stroke: none; }
 #track.anim { transition: transform .28s ease-out; }
 .page { width: 33.3333%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-bottom: 90px;
   background: linear-gradient(180deg, #f2f9fe 0%, #fff 60%); }
-.week { display: grid; grid-template-columns: repeat(7, 1fr); height: 172px; border-bottom: 1px solid #cfe7f5; }
+/* 한 주 줄 높이: 하루 칸에 일정 4줄이 딱 들어가는 높이 */
+.week { display: grid; grid-template-columns: repeat(7, 1fr); height: 148px; border-bottom: 1px solid #cfe7f5; }
 .cell { border-right: 1px solid #d9eef8; overflow: hidden; min-width: 0; padding-top: 6px; }
 .cell:last-child { border-right: 0; }
 .cell.blank { background: rgba(255,255,255,.35); }
@@ -73,12 +76,15 @@ svg .f { fill: currentColor; stroke: none; }
 .cell .s { text-align: center; font-size: 12.5px; color: #7d8590; height: 18px; line-height: 18px; white-space: nowrap; overflow: hidden; }
 .cell .s.hol { color: #f0a500; } .cell .s.anniv { color: #c98a00; } .cell .s.term { color: #22a447; } .cell .s.wk { color: #6b7380; }
 .cell.hol .n { color: #e5484d; }
-.cell.today .n { color: #fff; background: #29a8f0; width: 32px; height: 32px; line-height: 32px; border-radius: 50%; margin: -2px auto 0; font-size: 18px; }
+/* 오늘: 동그라미 대신 칸 테두리 (칸 안 공간을 차지하지 않음) */
+.cell.today { box-shadow: inset 0 0 0 2px #29a8f0; border-radius: 4px; }
+.cell.today .n { color: #1478b8; font-weight: 800; }
 .cell.sel { background: rgba(41,168,240,.08); }
 .items { margin-top: 6px; }
+.items .it:nth-child(n+5) { display: none; } /* 하루 칸에는 4줄까지 (나머지는 날짜를 눌러 보기) */
 .it { background: #ececec; margin: 0 1px 4px; padding: 3px 2px 3px 3px; border-radius: 3px; font-size: 12px; line-height: 1.3;
   white-space: nowrap; overflow: hidden; color: #1d2433; }
-.it.done { color: #FF0000; text-decoration: line-through; }
+.it.done { color: #9aa0a6; text-decoration: line-through; }
 .it span[style*="color"], .txt span[style*="color"] { filter: brightness(.78) saturate(1.5); }
 .it span[style*="background"], .txt span[style*="background"] { color: #111 !important; filter: none; border-radius: 2px; }
 
@@ -1905,7 +1911,7 @@ svg .f { fill: currentColor; stroke: none; }
     });
     (function() {
         const $ = s => document.querySelector(s);
-        const VERSION = "2.1.2";
+        const VERSION = "2.1.3";
         const LS = {
             get(k, d) {
                 try {
